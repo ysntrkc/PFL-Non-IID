@@ -10,7 +10,7 @@ from utils.dataset_utils import check, separate_data, split_data, save_file
 
 random.seed(1)
 np.random.seed(1)
-num_clients = 20
+num_clients = 100
 num_classes = 10
 dir_path = "Cifar10/"
 
@@ -19,7 +19,7 @@ dir_path = "Cifar10/"
 def generate_cifar10(dir_path, num_clients, num_classes, niid, balance, partition):
     if not os.path.exists(dir_path):
         os.makedirs(dir_path)
-        
+
     # Setup directory for train/test data
     config_path = dir_path + "config.json"
     train_path = dir_path + "train/"
@@ -27,7 +27,7 @@ def generate_cifar10(dir_path, num_clients, num_classes, niid, balance, partitio
 
     if check(config_path, train_path, test_path, num_clients, num_classes, niid, balance, partition):
         return
-        
+
     # Get Cifar10 data
     transform = transforms.Compose(
         [transforms.ToTensor(), transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
@@ -61,10 +61,10 @@ def generate_cifar10(dir_path, num_clients, num_classes, niid, balance, partitio
     #     idx = dataset_label == i
     #     dataset.append(dataset_image[idx])
 
-    X, y, statistic = separate_data((dataset_image, dataset_label), num_clients, num_classes, 
+    X, y, statistic = separate_data((dataset_image, dataset_label), num_clients, num_classes,
                                     niid, balance, partition)
     train_data, test_data = split_data(X, y)
-    save_file(config_path, train_path, test_path, train_data, test_data, num_clients, num_classes, 
+    save_file(config_path, train_path, test_path, train_data, test_data, num_clients, num_classes,
         statistic, niid, balance, partition)
 
 
