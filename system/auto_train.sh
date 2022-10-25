@@ -51,7 +51,7 @@
 # nohup python -u main.py -lbs 16 -nc 20 -jr 1 -nb 10 -data Cifar10 -m dnn -algo FedAvg -gr 2000 -did 0 -go dnn > cifar10_fedavg.out 2>&1 &
 # nohup python -u main.py -lbs 16 -nc 20 -jr 1 -nb 10 -data Cifar10 -m cnn -algo FedAvg -gr 2000 -did 0 -go cnn > cifar10_fedavg1.out 2>&1 &
 # nohup python -u main.py -lbs 16 -nc 20 -jr 1 -nb 10 -data Cifar10 -m resnet -algo FedAvg -gr 2000 -did 0 -go resnet > cifar10_fedavg2.out 2>&1 &
-# # nohup python -u main.py -lbs 16 -nc 20 -jr 1 -nb 10 -data Cifar10 -m dnn -algo FedAvg -gr 2000 -did 0 -cdr 0.5 -go unstable > cifar10_fedavg1.out 2>&1 &
+# nohup python -u main.py -lbs 16 -nc 20 -jr 1 -nb 10 -data Cifar10 -m dnn -algo FedAvg -gr 2000 -did 0 -cdr 0.5 -go unstable > cifar10_fedavg1.out 2>&1 &
 
 # nohup python -u main.py -lbs 16 -nc 20 -jr 1 -nb 10 -data Cifar10 -m dnn -algo FedProx -gr 2000 -did 0 -mu 0.001 -go dnn > cifar10_fedprox.out 2>&1 &
 # nohup python -u main.py -lbs 16 -nc 20 -jr 1 -nb 10 -data Cifar10 -m cnn -algo FedProx -gr 2000 -did 0 -mu 0.001 -go cnn > cifar10_fedprox1.out 2>&1 &
@@ -117,7 +117,7 @@
 # nohup python -u main.py -lbs 4 -nc 20 -jr 1 -nb 100 -data Cifar100 -m resnet -algo FedAMP -gr 2000 -alk 5e-3 -lam 5e-7 -sg 1e-1 -did 0 -go resnet > cifar100_fedamp2.out 2>&1 &
 
 
-# ===============================================================horizontal(fmnist)======================================================================  
+# ===============================================================horizontal(fmnist)======================================================================
 
 # rm ../dataset/fmnist/config.json
 # cd ../dataset/
@@ -146,7 +146,7 @@
 # nohup python -u main.py -lbs 16 -nc 20 -jr 1 -nb 10 -data fmnist -m cnn -algo FedAMP -gr 2000 -alk 5e-3 -lam 5e-7 -sg 1e-1 -did 1 -go cnn > fmnist_fedamp1.out 2>&1 &
 
 
-# ===============================================================horizontal(agnews)======================================================================  
+# ===============================================================horizontal(agnews)======================================================================
 
 # rm ../dataset/agnews/config.json
 # cd ../dataset/

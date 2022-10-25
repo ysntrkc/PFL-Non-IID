@@ -28,6 +28,7 @@ class Server(object):
         self.time_threthold = args.time_threthold
         self.save_folder_name = args.save_folder_name
         self.top_cnt = 100
+        self.model = args.model
 
         self.clients = []
         self.selected_clients = []
@@ -52,11 +53,11 @@ class Server(object):
         for i, train_slow, send_slow in zip(range(self.num_clients), self.train_slow_clients, self.send_slow_clients):
             train_data = read_client_data(self.dataset, i, is_train=True)
             test_data = read_client_data(self.dataset, i, is_train=False)
-            client = clientObj(args, 
-                            id=i, 
-                            train_samples=len(train_data), 
-                            test_samples=len(test_data), 
-                            train_slow=train_slow, 
+            client = clientObj(args,
+                            id=i,
+                            train_samples=len(train_data),
+                            test_samples=len(test_data),
+                            train_slow=train_slow,
                             send_slow=send_slow)
             self.clients.append(client)
 
@@ -108,7 +109,7 @@ class Server(object):
         self.global_model = copy.deepcopy(self.uploaded_models[0])
         for param in self.global_model.parameters():
             param.data.zero_()
-            
+
         for w, client_model in zip(self.uploaded_weights, self.uploaded_models):
             self.add_parameters(w, client_model)
 
@@ -133,7 +134,7 @@ class Server(object):
         model_path = os.path.join("models", self.dataset)
         model_path = os.path.join(model_path, self.algorithm + "_server" + ".pt")
         return os.path.exists(model_path)
-        
+
     def save_results(self):
         algo = self.dataset + "_" + self.algorithm
         result_path = "../results/"
@@ -141,8 +142,7 @@ class Server(object):
             os.makedirs(result_path)
 
         if (len(self.rs_test_acc)):
-            algo = algo + "_" + self.goal + "_" + str(self.times)
-            file_path = result_path + "{}.h5".format(algo)
+            file_path = f"{result_path}{algo}_{self.model}_gr{self.global_rounds}_ls{self.local_steps}_bs{self.batch_size}_lr{self.learning_rate}.h5"
             print("File path: " + file_path)
 
             with h5py.File(file_path, 'w') as hf:
@@ -194,12 +194,12 @@ class Server(object):
         train_loss = sum(stats_train[2])*1.0 / sum(stats_train[1])
         accs = [a / n for a, n in zip(stats[2], stats[1])]
         aucs = [a / n for a, n in zip(stats[3], stats[1])]
-        
+
         if acc == None:
             self.rs_test_acc.append(test_acc)
         else:
             acc.append(test_acc)
-        
+
         if loss == None:
             self.rs_train_loss.append(train_loss)
         else:
