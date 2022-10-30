@@ -85,50 +85,50 @@ def run(args):
                 args.model = DNN(3*32*32, 100, num_classes=args.num_classes).to(args.device)
             else:
                 args.model = DNN(60, 20, num_classes=args.num_classes).to(args.device)
-        
+
         elif model_str == "resnet":
-            args.model = torchvision.models.resnet18(pretrained=False, num_classes=args.num_classes).to(args.device)
-            
-            # args.model = torchvision.models.resnet18(pretrained=True).to(args.device)
-            # feature_dim = list(args.model.fc.parameters())[0].shape[1]
-            # args.model.fc = nn.Linear(feature_dim, args.num_classes).to(args.device)
-            
-            # args.model = resnet18(num_classes=args.num_classes, has_bn=True, bn_block_num=4).to(args.device)
+            # args.model = torchvision.models.resnet18(pretrained=False, num_classes=args.num_classes).to(args.device)
+
+            args.model = torchvision.models.resnet18(pretrained=True).to(args.device)
+            feature_dim = list(args.model.fc.parameters())[0].shape[1]
+            args.model.fc = nn.Linear(feature_dim, args.num_classes).to(args.device)
+
+            # args.model = torchvision.models.resnet18(num_classes=args.num_classes, has_bn=True, bn_block_num=4).to(args.device)
 
         elif model_str == "alexnet":
             args.model = alexnet(pretrained=False, num_classes=args.num_classes).to(args.device)
-            
+
             # args.model = alexnet(pretrained=True).to(args.device)
             # feature_dim = list(args.model.fc.parameters())[0].shape[1]
             # args.model.fc = nn.Linear(feature_dim, args.num_classes).to(args.device)
-            
+
         elif model_str == "googlenet":
             args.model = torchvision.models.googlenet(pretrained=False, aux_logits=False, num_classes=args.num_classes).to(args.device)
-            
+
             # args.model = torchvision.models.googlenet(pretrained=True, aux_logits=False).to(args.device)
             # feature_dim = list(args.model.fc.parameters())[0].shape[1]
             # args.model.fc = nn.Linear(feature_dim, args.num_classes).to(args.device)
 
         elif model_str == "mobilenet_v2":
             args.model = mobilenet_v2(pretrained=False, num_classes=args.num_classes).to(args.device)
-            
+
             # args.model = mobilenet_v2(pretrained=True).to(args.device)
             # feature_dim = list(args.model.fc.parameters())[0].shape[1]
             # args.model.fc = nn.Linear(feature_dim, args.num_classes).to(args.device)
-            
+
         elif model_str == "lstm":
             args.model = LSTMNet(hidden_dim=hidden_dim, vocab_size=vocab_size, num_classes=args.num_classes).to(args.device)
 
         elif model_str == "bilstm":
-            args.model = BiLSTM_TextClassification(input_size=vocab_size, hidden_size=hidden_dim, output_size=args.num_classes, 
-                        num_layers=1, embedding_dropout=0, lstm_dropout=0, attention_dropout=0, 
+            args.model = BiLSTM_TextClassification(input_size=vocab_size, hidden_size=hidden_dim, output_size=args.num_classes,
+                        num_layers=1, embedding_dropout=0, lstm_dropout=0, attention_dropout=0,
                         embedding_length=hidden_dim).to(args.device)
 
         elif model_str == "fastText":
             args.model = fastText(hidden_dim=hidden_dim, vocab_size=vocab_size, num_classes=args.num_classes).to(args.device)
 
         elif model_str == "TextCNN":
-            args.model = TextCNN(hidden_dim=hidden_dim, max_len=max_len, vocab_size=vocab_size, 
+            args.model = TextCNN(hidden_dim=hidden_dim, max_len=max_len, vocab_size=vocab_size,
                             num_classes=args.num_classes).to(args.device)
         else:
             raise NotImplementedError
@@ -211,7 +211,7 @@ def run(args):
             args.model.fc = nn.Identity()
             args.model = LocalModel(args.model, args.predictor)
             server = FedBABU(args, i)
-            
+
         else:
             raise NotImplementedError
 
@@ -220,13 +220,10 @@ def run(args):
         time_list.append(time.time()-start)
 
     print(f"\nAverage time cost: {round(np.average(time_list), 2)}s.")
-    
+
 
     # Global average
-    average_data(dataset=args.dataset, 
-                algorithm=args.algorithm, 
-                goal=args.goal, 
-                times=args.times, 
+    average_data(args,
                 length=args.global_rounds/args.eval_gap+1)
 
     print("All done!")
@@ -239,7 +236,7 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
     # general
-    parser.add_argument('-go', "--goal", type=str, default="test", 
+    parser.add_argument('-go', "--goal", type=str, default="test",
                         help="The goal for this experiment")
     parser.add_argument('-dev', "--device", type=str, default="cuda",
                         choices=["cpu", "cuda"])
@@ -298,7 +295,7 @@ if __name__ == "__main__":
     parser.add_argument('-itk', "--itk", type=int, default=4000,
                         help="The iterations for solving quadratic subproblems")
     # FedAMP
-    parser.add_argument('-alk', "--alphaK", type=float, default=1.0, 
+    parser.add_argument('-alk', "--alphaK", type=float, default=1.0,
                         help="lambda/sqrt(GLOABL-ITRATION) according to the paper")
     parser.add_argument('-sg', "--sigma", type=float, default=1.0)
     # APFL
@@ -351,12 +348,12 @@ if __name__ == "__main__":
     #     activities=[
     #         torch.profiler.ProfilerActivity.CPU,
     #         torch.profiler.ProfilerActivity.CUDA],
-    #     profile_memory=True, 
+    #     profile_memory=True,
     #     on_trace_ready=torch.profiler.tensorboard_trace_handler('./log')
     #     ) as prof:
     # with torch.autograd.profiler.profile(profile_memory=True) as prof:
     run(args)
 
-    
+
     # print(prof.key_averages().table(sort_by="cpu_time_total", row_limit=20))
     # print(f"\nTotal time cost: {round(time.time()-total_start, 2)}s.")

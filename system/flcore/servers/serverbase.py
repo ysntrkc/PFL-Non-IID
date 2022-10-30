@@ -142,7 +142,7 @@ class Server(object):
             os.makedirs(result_path)
 
         if (len(self.rs_test_acc)):
-            file_path = f"{result_path}{algo}_{self.model}_gr{self.global_rounds}_ls{self.local_steps}_bs{self.batch_size}_lr{self.learning_rate}.h5"
+            file_path = f"{result_path}{algo}_{self.goal}_gr{self.global_rounds}_ls{self.local_steps}_bs{self.batch_size}_lr{self.learning_rate}.h5"
             print("File path: " + file_path)
 
             with h5py.File(file_path, 'w') as hf:
