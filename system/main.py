@@ -224,7 +224,7 @@ def run(args):
 
     # Global average
     average_data(args,
-                length=args.global_rounds/args.eval_gap+1)
+                length=args.global_rounds/args.eval_gap)
 
     print("All done!")
 
@@ -232,6 +232,10 @@ def run(args):
 
 
 if __name__ == "__main__":
+    out_path = "./out/"
+    if not os.path.exists(out_path):
+        os.makedirs(out_path)
+
     total_start = time.time()
 
     parser = argparse.ArgumentParser()
