@@ -19,3 +19,7 @@
 # python -u main.py -lbs 25 -nc 100 -jr 0.1 -nb 10 -ls 10 -lr 0.05 -data Cifar10 -m cnn -algo FedAvg -gr 500 -did 0 -go cnn > out/9.out 2>&1 &
 # python -u main.py -lbs 25 -nc 100 -jr 0.1 -nb 10 -ls 10 -lr 0.05 -data Cifar10 -m cnn -algo FedAvg -gr 500 -did 0 -go cnn > out/10.out 2>&1 &
 # python -u main.py -lbs 25 -nc 100 -jr 0.1 -nb 10 -ls 10 -lr 0.05 -data Cifar10 -m cnn -algo FedAvg -gr 500 -did 0 -go cnn > out/11.out 2>&1 &
+
+# python -u main.py -lbs 10 -nc 100 -jr 0.1 -nb 10 -ls 10 -lr 0.05 -data Cifar10 -m resnet -algo FedAvg -gr 300 -did 0 -go resnet > out/bs10.out 2>&1 &
+# python -u main.py -lbs 50 -nc 100 -jr 0.1 -nb 10 -ls 10 -lr 0.05 -data Cifar10 -m resnet -algo FedAvg -gr 300 -did 1 -go resnet > out/bs50.out 2>&1 &
+python -u main.py -lbs 25 -nc 100 -jr 0.1 -nb 10 -ls 10 -lr 0.05 -data Cifar10 -m resnet -algo FedAvg -gr 300 -did 0 -go resnet > out/bs25.out 2>&1 &
