@@ -10,7 +10,7 @@ from utils.dataset_utils import check, separate_data, split_data, save_file
 
 random.seed(1)
 np.random.seed(1)
-num_clients = 20
+num_clients = 100
 num_classes = 10
 dir_path = "mnist/"
 
@@ -19,7 +19,7 @@ dir_path = "mnist/"
 def generate_mnist(dir_path, num_clients, num_classes, niid, balance, partition):
     if not os.path.exists(dir_path):
         os.makedirs(dir_path)
-        
+
     # Setup directory for train/test data
     config_path = dir_path + "config.json"
     train_path = dir_path + "train/"
@@ -66,10 +66,10 @@ def generate_mnist(dir_path, num_clients, num_classes, niid, balance, partition)
     #     idx = dataset_label == i
     #     dataset.append(dataset_image[idx])
 
-    X, y, statistic = separate_data((dataset_image, dataset_label), num_clients, num_classes, 
+    X, y, statistic = separate_data((dataset_image, dataset_label), num_clients, num_classes,
                                     niid, balance, partition)
     train_data, test_data = split_data(X, y)
-    save_file(config_path, train_path, test_path, train_data, test_data, num_clients, num_classes, 
+    save_file(config_path, train_path, test_path, train_data, test_data, num_clients, num_classes,
         statistic, niid, balance, partition)
 
 

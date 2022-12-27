@@ -1,2 +1,3 @@
 *.pyc
 dataset/Cifar10
+dataset/mnist*
