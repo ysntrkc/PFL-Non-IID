@@ -35,7 +35,27 @@
 # python -u main.py -lbs 64 -nc 100 -jr 0.1 -nb 10 -data mnist -m cnn -algo FedAvg -gr 500 -did 0 -go cnn -ls 10 > out/mnist_fedavg_05_iid_balance.out 2>&1 &
 # python -u main.py -lbs 128 -nc 100 -jr 0.1 -nb 10 -data mnist -m cnn -algo FedAvg -gr 500 -did 0 -go cnn -ls 20 > out/mnist_fedavg_06_iid_balance.out 2>&1 &
 
-python -u main.py -lbs 16 -nc 100 -jr 0.1 -nb 10 -data mnist -m cnn -algo FedAvg -gr 300 -did 0 -go cnn -ls 10 > out/mnist_fedavg_01_noniid.out 2>&1 &
-python -u main.py -lbs 32 -nc 100 -jr 0.1 -nb 10 -data mnist -m cnn -algo FedAvg -gr 300 -did 0 -go cnn -ls 10 > out/mnist_fedavg_02_noniid.out 2>&1 &
-python -u main.py -lbs 64 -nc 100 -jr 0.1 -nb 10 -data mnist -m cnn -algo FedAvg -gr 300 -did 0 -go cnn -ls 10 > out/mnist_fedavg_03_noniid.out 2>&1 &
-python -u main.py -lbs 128 -nc 100 -jr 0.1 -nb 10 -data mnist -m cnn -algo FedAvg -gr 300 -did 0 -go cnn -ls 10 > out/mnist_fedavg_04_noniid.out 2>&1 &
+# python -u main.py -lbs 16 -nc 100 -jr 0.1 -nb 10 -data mnist -m cnn -algo FedAvg -gr 300 -did 0 -go cnn -ls 10 > out/mnist_fedavg_01_noniid.out 2>&1 &
+# python -u main.py -lbs 32 -nc 100 -jr 0.1 -nb 10 -data mnist -m cnn -algo FedAvg -gr 300 -did 0 -go cnn -ls 10 > out/mnist_fedavg_02_noniid.out 2>&1 &
+# python -u main.py -lbs 64 -nc 100 -jr 0.1 -nb 10 -data mnist -m cnn -algo FedAvg -gr 300 -did 0 -go cnn -ls 10 > out/mnist_fedavg_03_noniid.out 2>&1 &
+# python -u main.py -lbs 128 -nc 100 -jr 0.1 -nb 10 -data mnist -m cnn -algo FedAvg -gr 300 -did 0 -go cnn -ls 10 > out/mnist_fedavg_04_noniid.out 2>&1 &
+
+# python -u main.py -lbs 16 -nc 100 -jr 0.1 -nb 10 -data Cifar10 -m resnet -algo FedAvg -gr 150 -did 0 -go resnet -ls 10 > out/cifar_fedavg_01_noniid_res.out 2>&1 &
+# python -u main.py -lbs 32 -nc 100 -jr 0.1 -nb 10 -data Cifar10 -m resnet -algo FedAvg -gr 150 -did 0 -go resnet -ls 10 > out/cifar_fedavg_02_noniid_res.out 2>&1 &
+# python -u main.py -lbs 64 -nc 100 -jr 0.1 -nb 10 -data Cifar10 -m resnet -algo FedAvg -gr 150 -did 0 -go resnet -ls 10 > out/cifar_fedavg_03_noniid_res.out 2>&1 &
+# python -u main.py -lbs 128 -nc 100 -jr 0.1 -nb 10 -data Cifar10 -m resnet -algo FedAvg -gr 150 -did 1 -go resnet -ls 10 > out/cifar_fedavg_04_noniid_res.out 2>&1 &
+
+# python -u main.py -lbs 16 -nc 100 -jr 0.1 -nb 10 -data Cifar10 -m resnet -algo FedAvg -gr 150 -did 1 -go resnet -ls 1 > out/cifar_fedavg_05_noniid_res.out 2>&1 &
+# python -u main.py -lbs 32 -nc 100 -jr 0.1 -nb 10 -data Cifar10 -m resnet -algo FedAvg -gr 150 -did 1 -go resnet -ls 1 > out/cifar_fedavg_06_noniid_res.out 2>&1 &
+# python -u main.py -lbs 64 -nc 100 -jr 0.1 -nb 10 -data Cifar10 -m resnet -algo FedAvg -gr 150 -did 1 -go resnet -ls 1 > out/cifar_fedavg_07_noniid_res.out 2>&1 &
+# python -u main.py -lbs 128 -nc 100 -jr 0.1 -nb 10 -data Cifar10 -m resnet -algo FedAvg -gr 150 -did 1 -go resnet -ls 1 > out/cifar_fedavg_08_noniid_res.out 2>&1 &
+
+# python -u main.py -lbs 16 -nc 100 -jr 0.1 -nb 10 -data mnist -m cnn -algo FedAvg -gr 160 -did 0 -go cnn -ls 1 > out/mnist_fedavg_05_noniid.out 2>&1 &
+# python -u main.py -lbs 32 -nc 100 -jr 0.1 -nb 10 -data mnist -m cnn -algo FedAvg -gr 160 -did 1 -go cnn -ls 1 > out/mnist_fedavg_06_noniid.out 2>&1 &
+# python -u main.py -lbs 64 -nc 100 -jr 0.1 -nb 10 -data mnist -m cnn -algo FedAvg -gr 160 -did 0 -go cnn -ls 1 > out/mnist_fedavg_07_noniid.out 2>&1 &
+# python -u main.py -lbs 128 -nc 100 -jr 0.1 -nb 10 -data mnist -m cnn -algo FedAvg -gr 160 -did 1 -go cnn -ls 1 > out/mnist_fedavg_08_noniid.out 2>&1 &
+
+# python -u main.py -lbs 16 -nc 100 -jr 0.1 -nb 10 -data Cifar10 -m resnet -algo FedAvg -gr 150 -did 0 -go resnet -ls 10 > out/cifar_fedavg_11_noniid_res.out 2>&1 &
+# python -u main.py -lbs 32 -nc 100 -jr 0.1 -nb 10 -data Cifar10 -m resnet -algo FedAvg -gr 150 -did 1 -go resnet -ls 10 > out/cifar_fedavg_12_noniid_res.out 2>&1 &
+# python -u main.py -lbs 64 -nc 100 -jr 0.1 -nb 10 -data Cifar10 -m resnet -algo FedAvg -gr 150 -did 0 -go resnet -ls 10 > out/cifar_fedavg_13_noniid_res.out 2>&1 &
+# python -u main.py -lbs 128 -nc 100 -jr 0.1 -nb 10 -data Cifar10 -m resnet -algo FedAvg -gr 150 -did 1 -go resnet -ls 10 > out/cifar_fedavg_14_noniid_res.out 2>&1 &

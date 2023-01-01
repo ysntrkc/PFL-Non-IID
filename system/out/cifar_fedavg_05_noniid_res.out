@@ -1,0 +1,47 @@
+==================================================
+Algorithm: FedAvg
+Local batch size: 16
+Local steps: 1
+Local learing rate: 0.005
+Total number of clients: 100
+Clients join in each round: 0.1
+Client drop rate: 0.0
+Time select: False
+Time threthold: 10000
+Global rounds: 150
+Running times: 1
+Dataset: Cifar10
+Local model: resnet
+Using device: cuda
+Cuda device id: 1
+==================================================
+
+============= Running time: 0th =============
+Creating server and clients ...
+
+Join ratio / total clients: 0.1 / 100
+Finished creating server and clients.
+
+-------------Round number: 0-------------
+
+Evaluate global model
+Averaged Train Loss: 2.4417
+Averaged Test Accurancy: 0.1085
+Averaged Test AUC: 0.4929
+Std Test Accurancy: 0.1341
+Std Test AUC: 0.2022
+------------------------- time cost ------------------------- 125.32155013084412
+
+-------------Round number: 1-------------
+
+Evaluate global model
+Averaged Train Loss: 2.1826
+Averaged Test Accurancy: 0.2066
+Averaged Test AUC: 0.5554
+Std Test Accurancy: 0.2612
+Std Test AUC: 0.2477
+------------------------- time cost ------------------------- 127.08299398422241
+
+-------------Round number: 2-------------
+
+Evaluate global model

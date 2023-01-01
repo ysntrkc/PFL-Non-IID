@@ -130,4 +130,4 @@ dependencies:
     - ttach==0.0.3
     - urllib3==1.26.5
     - werkzeug==2.0.1
-prefix: /slstore/tsing/miniconda3/envs/fl_torch
+prefix: /slstore/tsing/miniconda3/envs/fl
