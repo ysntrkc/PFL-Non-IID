@@ -21,6 +21,7 @@ class Server(object):
         self.global_model = copy.deepcopy(args.model)
         self.num_clients = args.num_clients
         self.join_ratio = args.join_ratio
+        self.random_join_ratio = args.random_join_ratio
         self.join_clients = int(self.num_clients * self.join_ratio)
         self.algorithm = args.algorithm
         self.time_select = args.time_select
@@ -78,28 +79,41 @@ class Server(object):
             self.send_slow_rate)
 
     def select_clients(self):
-        selected_clients = list(np.random.choice(self.clients, self.join_clients, replace=False))
+        if self.random_join_ratio:
+            join_clients = np.random.choice(range(self.join_clients, self.num_clients+1), 1, replace=False)[0]
+        else:
+            join_clients = self.join_clients
+        selected_clients = list(np.random.choice(self.clients, join_clients, replace=False))
 
         return selected_clients
 
     def send_models(self):
-        assert (len(self.selected_clients) > 0)
+        assert (len(self.clients) > 0)
 
-        for client in self.selected_clients:
+        for client in self.clients:
+            start_time = time.time()
+            
             client.set_parameters(self.global_model)
+
+            client.send_time_cost['num_rounds'] += 1
+            client.send_time_cost['total_cost'] += 2 * (time.time() - start_time)
 
     def receive_models(self):
         assert (len(self.selected_clients) > 0)
 
+        active_clients = random.sample(
+            self.selected_clients, int((1-self.client_drop_rate) * self.join_clients))
+
         self.uploaded_weights = []
-        tot_samples = 0
-        self.uploaded_ids = []
         self.uploaded_models = []
-        for client in self.selected_clients:
-            self.uploaded_weights.append(client.train_samples)
-            tot_samples += client.train_samples
-            self.uploaded_ids.append(client.id)
-            self.uploaded_models.append(client.model)
+        tot_samples = 0
+        for client in active_clients:
+            client_time_cost = client.train_time_cost['total_cost'] / client.train_time_cost['num_rounds'] + \
+                    client.send_time_cost['total_cost'] / client.send_time_cost['num_rounds']
+            if client_time_cost <= self.time_threthold:
+                tot_samples += client.train_samples
+                self.uploaded_weights.append(client.train_samples)
+                self.uploaded_models.append(client.model)
         for i, w in enumerate(self.uploaded_weights):
             self.uploaded_weights[i] = w / tot_samples
 

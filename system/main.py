@@ -6,8 +6,8 @@ import os
 import time
 import warnings
 import numpy as np
-from torch.nn.functional import dropout
 import torchvision
+import logging
 
 from flcore.servers.serveravg import FedAvg
 from flcore.servers.serverpFedMe import pFedMe
@@ -28,6 +28,7 @@ from flcore.servers.serverproto import FedProto
 from flcore.servers.serverdyn import FedDyn
 from flcore.servers.servermoon import MOON
 from flcore.servers.serverbabu import FedBABU
+from flcore.servers.serverapple import APPLE
 
 from flcore.trainmodel.models import *
 
@@ -37,6 +38,9 @@ from flcore.trainmodel.alexnet import alexnet
 from flcore.trainmodel.mobilenet_v2 import mobilenet_v2
 from utils.result_utils import average_data
 from utils.mem_utils import MemReporter
+
+logger = logging.getLogger()
+logger.setLevel(logging.ERROR)
 
 warnings.simplefilter("ignore")
 torch.manual_seed(0)
@@ -67,16 +71,17 @@ def run(args):
                 args.model = Mclr_Logistic(60, num_classes=args.num_classes).to(args.device)
 
         elif model_str == "cnn":
-            if args.dataset == "mnist" or args.dataset == "fmnist":
+            if args.dataset[:5] == "mnist" or args.dataset == "fmnist":
                 args.model = FedAvgCNN(in_features=1, num_classes=args.num_classes, dim=1024).to(args.device)
-            elif args.dataset == "Cifar10" or args.dataset == "Cifar100":
+            elif args.dataset == "omniglot":
+                args.model = FedAvgCNN(in_features=1, num_classes=args.num_classes, dim=33856).to(args.device)
+            elif args.dataset[:5] == "Cifar":
                 args.model = FedAvgCNN(in_features=3, num_classes=args.num_classes, dim=1600).to(args.device)
                 # args.model = CifarNet(num_classes=args.num_classes).to(args.device)
-            elif args.dataset[:13] == "Tiny-imagenet" or args.dataset[:8] == "Imagenet":
-                args.model = FedAvgCNN(in_features=3, num_classes=args.num_classes, dim=10816).to(args.device)
+            elif args.dataset == "Digit5":
+                args.model = Digit5CNN().to(args.device)
             else:
-                args.model = FedAvgCNN(in_features=3, num_classes=args.num_classes, dim=1600).to(args.device)
-
+                args.model = FedAvgCNN(in_features=3, num_classes=args.num_classes, dim=10816).to(args.device)
 
         elif model_str == "dnn": # non-convex
             if args.dataset == "mnist" or args.dataset == "fmnist":
@@ -130,6 +135,14 @@ def run(args):
         elif model_str == "TextCNN":
             args.model = TextCNN(hidden_dim=hidden_dim, max_len=max_len, vocab_size=vocab_size,
                             num_classes=args.num_classes).to(args.device)
+
+        elif model_str == "Transformer":
+            args.model = TransformerModel(ntoken=vocab_size, d_model=hidden_dim, nhead=2, d_hid=hidden_dim, nlayers=2,
+                            num_classes=args.num_classes).to(args.device)
+
+        elif model_str == "AmazonMLP":
+            args.model = AmazonMLP().to(args.device)
+
         else:
             raise NotImplementedError
 
@@ -162,55 +175,59 @@ def run(args):
             server = APFL(args, i)
 
         elif args.algorithm == "FedPer":
-            args.predictor = copy.deepcopy(args.model.fc)
+            args.head = copy.deepcopy(args.model.fc)
             args.model.fc = nn.Identity()
-            args.model = LocalModel(args.model, args.predictor)
+            args.model = LocalModel(args.model, args.head)
             server = FedPer(args, i)
 
         elif args.algorithm == "Ditto":
             server = Ditto(args, i)
 
         elif args.algorithm == "FedRep":
-            args.predictor = copy.deepcopy(args.model.fc)
+            args.head = copy.deepcopy(args.model.fc)
             args.model.fc = nn.Identity()
-            args.model = LocalModel(args.model, args.predictor)
+            args.model = LocalModel(args.model, args.head)
             server = FedRep(args, i)
 
         elif args.algorithm == "FedPHP":
-            args.predictor = copy.deepcopy(args.model.fc)
+            args.head = copy.deepcopy(args.model.fc)
             args.model.fc = nn.Identity()
-            args.model = LocalModel(args.model, args.predictor)
+            args.model = LocalModel(args.model, args.head)
             server = FedPHP(args, i)
 
         elif args.algorithm == "FedBN":
             server = FedBN(args, i)
 
         elif args.algorithm == "FedROD":
-            args.predictor = copy.deepcopy(args.model.fc)
+            args.head = copy.deepcopy(args.model.fc)
             args.model.fc = nn.Identity()
-            args.model = LocalModel(args.model, args.predictor)
+            args.model = LocalModel(args.model, args.head)
             server = FedROD(args, i)
 
         elif args.algorithm == "FedProto":
-            args.predictor = copy.deepcopy(args.model.fc)
+            args.head = copy.deepcopy(args.model.fc)
             args.model.fc = nn.Identity()
-            args.model = LocalModel(args.model, args.predictor)
+            args.model = LocalModel(args.model, args.head)
             server = FedProto(args, i)
 
         elif args.algorithm == "FedDyn":
             server = FedDyn(args, i)
 
         elif args.algorithm == "MOON":
-            args.predictor = copy.deepcopy(args.model.fc)
+            args.head = copy.deepcopy(args.model.fc)
             args.model.fc = nn.Identity()
-            args.model = LocalModel(args.model, args.predictor)
+            args.model = LocalModel(args.model, args.head)
             server = MOON(args, i)
 
         elif args.algorithm == "FedBABU":
-            args.predictor = copy.deepcopy(args.model.fc)
+            args.head = copy.deepcopy(args.model.fc)
             args.model.fc = nn.Identity()
-            args.model = LocalModel(args.model, args.predictor)
+            args.model = LocalModel(args.model, args.head)
             server = FedBABU(args, i)
+
+
+        elif args.algorithm == "APPLE":
+            server = APPLE(args, i)
 
         else:
             raise NotImplementedError
@@ -248,7 +265,7 @@ if __name__ == "__main__":
     parser.add_argument('-data', "--dataset", type=str, default="mnist")
     parser.add_argument('-nb', "--num_classes", type=int, default=10)
     parser.add_argument('-m', "--model", type=str, default="cnn")
-    parser.add_argument('-p', "--predictor", type=str, default="cnn")
+    parser.add_argument('-p', "--head", type=str, default="cnn")
     parser.add_argument('-lbs', "--batch_size", type=int, default=10)
     parser.add_argument('-lr', "--local_learning_rate", type=float, default=0.005,
                         help="Local learning rate")
@@ -257,7 +274,9 @@ if __name__ == "__main__":
     parser.add_argument('-algo', "--algorithm", type=str, default="FedAvg")
     parser.add_argument('-jr', "--join_ratio", type=float, default=1.0,
                         help="Ratio of clients per round")
-    parser.add_argument('-nc', "--num_clients", type=int, default=20,
+    parser.add_argument('-rjr', "--random_join_ratio", type=bool, default=False,
+                        help="Random ratio of clients per round")
+    parser.add_argument('-nc', "--num_clients", type=int, default=1,
                         help="Total number of clients")
     parser.add_argument('-pv', "--prev", type=int, default=0,
                         help="Previous Running times")
@@ -271,7 +290,7 @@ if __name__ == "__main__":
     parser.add_argument('-sfn', "--save_folder_name", type=str, default='models')
     # practical
     parser.add_argument('-cdr', "--client_drop_rate", type=float, default=0.0,
-                        help="Dropout rate for clients")
+                        help="Rate for clients that train but drop out")
     parser.add_argument('-tsr', "--train_slow_rate", type=float, default=0.0,
                         help="The rate for slow clients when training locally")
     parser.add_argument('-ssr', "--send_slow_rate", type=float, default=0.0,
@@ -310,6 +329,9 @@ if __name__ == "__main__":
     parser.add_argument('-ta', "--tau", type=float, default=1.0)
     # FedBABU
     parser.add_argument('-fts', "--fine_tuning_steps", type=int, default=1)
+    # APPLE
+    parser.add_argument('-dlr', "--dr_learning_rate", type=float, default=0.0)
+    parser.add_argument('-L', "--L", type=float, default=1.0)
 
     args = parser.parse_args()
 

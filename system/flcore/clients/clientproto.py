@@ -5,7 +5,6 @@ import torch.nn as nn
 import numpy as np
 import time
 from flcore.clients.clientbase import Client
-from utils.privacy import *
 
 
 class clientProto(Client):
@@ -15,7 +14,7 @@ class clientProto(Client):
         self.loss = nn.CrossEntropyLoss()
         self.optimizer = torch.optim.SGD(self.model.parameters(), lr=self.learning_rate)
 
-        self.feature_dim = list(self.model.predictor.parameters())[0].shape[1]
+        self.feature_dim = list(self.model.head.parameters())[0].shape[1]
 
         self.protos = None
         self.global_protos = None
@@ -47,7 +46,7 @@ class clientProto(Client):
                     time.sleep(0.1 * np.abs(np.random.rand()))
                 self.optimizer.zero_grad()
                 rep = self.model.base(x)
-                output = self.model.predictor(rep)
+                output = self.model.head(rep)
                 loss = self.loss(output, y)
 
                 if self.global_protos != None:
@@ -110,22 +109,23 @@ class clientProto(Client):
         test_acc = 0
         test_num = 0
         
-        with torch.no_grad():
-            for x, y in testloader:
-                if type(x) == type([]):
-                    x[0] = x[0].to(self.device)
-                else:
-                    x = x.to(self.device)
-                y = y.to(self.device)
-                rep = self.model.base(x)
+        if self.global_protos is not None:
+            with torch.no_grad():
+                for x, y in testloader:
+                    if type(x) == type([]):
+                        x[0] = x[0].to(self.device)
+                    else:
+                        x = x.to(self.device)
+                    y = y.to(self.device)
+                    rep = self.model.base(x)
 
-                output = float('inf') * torch.ones(y.shape[0], self.num_classes).to(self.device)
-                for i, r in enumerate(rep):
-                    for j, pro in self.global_protos.items():
-                        output[i, j] = self.loss_mse(r, pro)
+                    output = float('inf') * torch.ones(y.shape[0], self.num_classes).to(self.device)
+                    for i, r in enumerate(rep):
+                        for j, pro in self.global_protos.items():
+                            output[i, j] = self.loss_mse(r, pro)
 
-                test_acc += (torch.sum(torch.argmin(output, dim=1) == y)).item()
-                test_num += y.shape[0]
+                    test_acc += (torch.sum(torch.argmin(output, dim=1) == y)).item()
+                    test_num += y.shape[0]
 
         return test_acc, test_num, 0
 

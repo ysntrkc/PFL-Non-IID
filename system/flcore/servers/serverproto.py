@@ -65,10 +65,15 @@ class FedProto(Server):
         self.save_results()
 
     def send_protos(self):
-        assert (len(self.selected_clients) > 0)
+        assert (len(self.clients) > 0)
 
-        for client in self.selected_clients:
+        for client in self.clients:
+            start_time = time.time()
+
             client.set_protos(self.global_protos)
+
+            client.send_time_cost['num_rounds'] += 1
+            client.send_time_cost['total_cost'] += 2 * (time.time() - start_time)
 
     def receive_protos(self):
         assert (len(self.selected_clients) > 0)

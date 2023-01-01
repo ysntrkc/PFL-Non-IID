@@ -1,23 +1,182 @@
+import math
 import torch
-import torch.nn as nn
 import torch.nn.functional as F
+from torch.nn import TransformerEncoder, TransformerEncoderLayer
+from torch import nn, Tensor
 
 batch_size = 16
 
 
 class LocalModel(nn.Module):
-    def __init__(self, base, predictor):
+    def __init__(self, base, head):
         super(LocalModel, self).__init__()
 
         self.base = base
         self.predictor = predictor
-
+        
     def forward(self, x):
         out = self.base(x)
-        out = self.predictor(out)
+        out = self.head(out)
 
         return out
 
+<<<<<<< HEAD
+=======
+###########################################################
+
+# https://github.com/jindongwang/Deep-learning-activity-recognition/blob/master/pytorch/network.py
+class HARCNN(nn.Module):
+    def __init__(self, in_channels=9, dim_hidden=64*26, num_classes=6, conv_kernel_size=(1, 9), pool_kernel_size=(1, 2)):
+        super().__init__()
+        self.conv1 = nn.Sequential(
+            nn.Conv2d(in_channels, 32, kernel_size=conv_kernel_size),
+            nn.ReLU(),
+            nn.MaxPool2d(kernel_size=pool_kernel_size, stride=2)
+        )
+        self.conv2 = nn.Sequential(
+            nn.Conv2d(32, 64, kernel_size=conv_kernel_size),
+            nn.ReLU(),
+            nn.MaxPool2d(kernel_size=pool_kernel_size, stride=2)
+        )
+        self.fc = nn.Sequential(
+            nn.Linear(dim_hidden, 1024),
+            nn.ReLU(),
+            nn.Linear(1024, 512),
+            nn.ReLU(),
+            nn.Linear(512, num_classes)
+        )
+
+    def forward(self, x):
+        out = self.conv1(x)
+        out = self.conv2(out)
+        out = torch.flatten(out, 1)
+        out = self.fc(out)
+        return out
+
+
+# https://github.com/FengHZ/KD3A/blob/master/model/digit5.py
+class Digit5CNN(nn.Module):
+    def __init__(self):
+        super(Digit5CNN, self).__init__()
+        self.encoder = nn.Sequential()
+        self.encoder.add_module("conv1", nn.Conv2d(3, 64, kernel_size=5, stride=1, padding=2))
+        self.encoder.add_module("bn1", nn.BatchNorm2d(64))
+        self.encoder.add_module("relu1", nn.ReLU())
+        self.encoder.add_module("maxpool1", nn.MaxPool2d(kernel_size=3, stride=2, padding=1, ceil_mode=False))
+        self.encoder.add_module("conv2", nn.Conv2d(64, 64, kernel_size=5, stride=1, padding=2))
+        self.encoder.add_module("bn2", nn.BatchNorm2d(64))
+        self.encoder.add_module("relu2", nn.ReLU())
+        self.encoder.add_module("maxpool2", nn.MaxPool2d(kernel_size=3, stride=2, padding=1, ceil_mode=False))
+        self.encoder.add_module("conv3", nn.Conv2d(64, 128, kernel_size=5, stride=1, padding=2))
+        self.encoder.add_module("bn3", nn.BatchNorm2d(128))
+        self.encoder.add_module("relu3", nn.ReLU())
+
+        self.linear = nn.Sequential()
+        self.linear.add_module("fc1", nn.Linear(8192, 3072))
+        self.linear.add_module("bn4", nn.BatchNorm1d(3072))
+        self.linear.add_module("relu4", nn.ReLU())
+        self.linear.add_module("dropout", nn.Dropout())
+        self.linear.add_module("fc2", nn.Linear(3072, 2048))
+        self.linear.add_module("bn5", nn.BatchNorm1d(2048))
+        self.linear.add_module("relu5", nn.ReLU())
+
+        self.fc = nn.Linear(2048, 10)
+
+    def forward(self, x):
+        batch_size = x.size(0)
+        feature = self.encoder(x)
+        feature = feature.view(batch_size, -1)
+        feature = self.linear(feature)
+        out = self.fc(feature)
+        return out
+
+
+# https://pytorch.org/tutorials/beginner/transformer_tutorial.html
+class PositionalEncoding(nn.Module):
+
+    def __init__(self, d_model: int, dropout: float = 0.1, max_len: int = 5000):
+        super().__init__()
+        self.dropout = nn.Dropout(p=dropout)
+
+        position = torch.arange(max_len).unsqueeze(1)
+        div_term = torch.exp(torch.arange(0, d_model, 2) * (-math.log(10000.0) / d_model))
+        pe = torch.zeros(max_len, 1, d_model)
+        pe[:, 0, 0::2] = torch.sin(position * div_term)
+        pe[:, 0, 1::2] = torch.cos(position * div_term)
+        self.register_buffer('pe', pe)
+
+    def forward(self, x: Tensor) -> Tensor:
+        """
+        Args:
+            x: Tensor, shape [seq_len, batch_size, embedding_dim]
+        """
+        x = x + self.pe[:x.size(0)]
+        return self.dropout(x)
+
+class TransformerModel(nn.Module):
+
+    def __init__(self, ntoken: int, d_model: int, nhead: int, d_hid: int,
+                 nlayers: int, num_classes: int, dropout: float = 0.5):
+        super().__init__()
+        self.model_type = 'Transformer'
+        self.pos_encoder = PositionalEncoding(d_model, dropout)
+        encoder_layers = TransformerEncoderLayer(d_model, nhead, d_hid, dropout)
+        self.transformer_encoder = TransformerEncoder(encoder_layers, nlayers)
+        self.encoder = nn.Embedding(ntoken, d_model)
+        self.d_model = d_model
+        self.fc = nn.Linear(d_model, num_classes)
+
+        self.init_weights()
+
+    def init_weights(self) -> None:
+        initrange = 0.1
+        self.encoder.weight.data.uniform_(-initrange, initrange)
+        self.fc.bias.data.zero_()
+        self.fc.weight.data.uniform_(-initrange, initrange)
+
+    def forward(self, src: Tensor, src_mask: Tensor) -> Tensor:
+        """
+        Args:
+            src: Tensor, shape [seq_len, batch_size]
+            src_mask: Tensor, shape [seq_len, seq_len]
+
+        Returns:
+            output Tensor of shape [seq_len, batch_size, ntoken]
+        """
+        src = self.encoder(src) * math.sqrt(self.d_model)
+        src = self.pos_encoder(src)
+        output = self.transformer_encoder(src, src_mask)
+        output = self.fc(output)
+        return output
+
+def generate_square_subsequent_mask(sz: int) -> Tensor:
+    """Generates an upper-triangular matrix of -inf, with zeros on diag."""
+    return torch.triu(torch.ones(sz, sz) * float('-inf'), diagonal=1)
+
+
+# https://github.com/FengHZ/KD3A/blob/master/model/amazon.py
+class AmazonMLP(nn.Module):
+    def __init__(self):
+        super(AmazonMLP, self).__init__()
+        self.encoder = nn.Sequential(
+            nn.Linear(5000, 1000),
+            # nn.BatchNorm1d(1000),
+            nn.ReLU(),
+            nn.Linear(1000, 500),
+            # nn.BatchNorm1d(500),
+            nn.ReLU(),
+            nn.Linear(500, 100),
+            # nn.BatchNorm1d(100),
+            nn.ReLU()
+        )
+        self.fc = nn.Linear(100, 2)
+
+    def forward(self, x):
+        out = self.encoder(x)
+        out = self.fc(out)
+        return out
+
+>>>>>>> 3770eec3e6ab6e14e7d7c4cfaf1657985459e34c
 
 # # https://github.com/katsura-jp/fedavg.pytorch/blob/master/src/models/cnn.py
 # class FedAvgCNN(nn.Module):

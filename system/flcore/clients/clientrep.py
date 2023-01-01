@@ -3,7 +3,6 @@ import torch.nn as nn
 import numpy as np
 import time
 from flcore.clients.clientbase import Client
-from utils.privacy import *
 
 
 class clientRep(Client):
@@ -12,7 +11,7 @@ class clientRep(Client):
         
         self.loss = nn.CrossEntropyLoss()
         self.optimizer = torch.optim.SGD(self.model.base.parameters(), lr=self.learning_rate)
-        self.poptimizer = torch.optim.SGD(self.model.predictor.parameters(), lr=self.learning_rate)
+        self.poptimizer = torch.optim.SGD(self.model.head.parameters(), lr=self.learning_rate)
 
         self.plocal_steps = args.plocal_steps
 
@@ -26,7 +25,7 @@ class clientRep(Client):
 
         for param in self.model.base.parameters():
             param.requires_grad = False
-        for param in self.model.predictor.parameters():
+        for param in self.model.head.parameters():
             param.requires_grad = True
 
         for step in range(self.plocal_steps):
@@ -50,7 +49,7 @@ class clientRep(Client):
 
         for param in self.model.base.parameters():
             param.requires_grad = True
-        for param in self.model.predictor.parameters():
+        for param in self.model.head.parameters():
             param.requires_grad = False
 
         for step in range(max_local_steps):
@@ -72,6 +71,7 @@ class clientRep(Client):
 
         self.train_time_cost['num_rounds'] += 1
         self.train_time_cost['total_cost'] += time.time() - start_time
+        
             
     def set_parameters(self, base):
         for new_param, old_param in zip(base.parameters(), self.model.base.parameters()):
