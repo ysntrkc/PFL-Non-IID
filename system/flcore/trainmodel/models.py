@@ -13,16 +13,12 @@ class LocalModel(nn.Module):
 
         self.base = base
         self.predictor = predictor
-        
+
     def forward(self, x):
         out = self.base(x)
         out = self.head(out)
 
         return out
-
-<<<<<<< HEAD
-=======
-###########################################################
 
 # https://github.com/jindongwang/Deep-learning-activity-recognition/blob/master/pytorch/network.py
 class HARCNN(nn.Module):
@@ -176,7 +172,6 @@ class AmazonMLP(nn.Module):
         out = self.fc(out)
         return out
 
->>>>>>> 3770eec3e6ab6e14e7d7c4cfaf1657985459e34c
 
 # # https://github.com/katsura-jp/fedavg.pytorch/blob/master/src/models/cnn.py
 # class FedAvgCNN(nn.Module):
