@@ -244,6 +244,70 @@ class FedAvgCNN(nn.Module):
 
 # ====================================================================================================================
 
+class BrainCNN(nn.Module):
+    def __init__(self, in_features=1, num_classes=5, dim=25600):
+        super().__init__()
+        self.conv1 = nn.Sequential(
+            nn.Conv2d(in_features,
+                        32,
+                        kernel_size=5,
+                        padding=0,
+                        stride=1,
+                        bias=True),
+            nn.ReLU(inplace=True),
+            nn.MaxPool2d(kernel_size=(2, 2))
+        )
+        self.conv2 = nn.Sequential(
+            nn.Conv2d(32,
+                        64,
+                        kernel_size=5,
+                        padding=0,
+                        stride=1,
+                        bias=True),
+            nn.ReLU(inplace=True),
+            nn.MaxPool2d(kernel_size=(2, 2))
+        )
+        self.conv3 = nn.Sequential(
+            nn.Conv2d(64,
+                        128,
+                        kernel_size=5,
+                        padding=0,
+                        stride=1,
+                        bias=True),
+            nn.ReLU(inplace=True),
+            nn.MaxPool2d(kernel_size=(2, 2))
+        )
+        self.conv4 = nn.Sequential(
+            nn.Conv2d(128,
+                        256,
+                        kernel_size=5,
+                        padding=0,
+                        stride=1,
+                        bias=True),
+            nn.ReLU(inplace=True),
+            nn.MaxPool2d(kernel_size=(2, 2))
+        )
+        self.fc1 = nn.Sequential(
+            nn.Linear(dim, 1024),
+            nn.ReLU(inplace=True)
+        )
+        self.fc2 = nn.Sequential(
+            nn.Linear(dim, 256),
+            nn.ReLU(inplace=True)
+        )
+        self.fc = nn.Linear(256, num_classes)
+
+    def forward(self, x):
+        out = self.conv1(x)
+        out = self.conv2(out)
+        out = self.conv3(out)
+        out = self.conv4(out)
+        out = torch.flatten(out, 1)
+        out = self.fc1(out)
+        out = self.fc2(out)
+        out = self.fc(out)
+        return out
+
 # https://github.com/katsura-jp/fedavg.pytorch/blob/master/src/models/mlp.py
 class FedAvgMLP(nn.Module):
     def __init__(self, in_features=784, num_classes=10, hidden_dim=200):

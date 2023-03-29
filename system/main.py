@@ -31,6 +31,7 @@ from flcore.servers.serverbabu import FedBABU
 from flcore.servers.serverapple import APPLE
 
 from flcore.trainmodel.models import *
+from flcore.trainmodel.dense_models import *
 
 from flcore.trainmodel.bilstm import BiLSTM_TextClassification
 # from flcore.trainmodel.resnet import resnet18 as resnet
@@ -80,6 +81,8 @@ def run(args):
                 # args.model = CifarNet(num_classes=args.num_classes).to(args.device)
             elif args.dataset == "Digit5":
                 args.model = Digit5CNN().to(args.device)
+            elif args.dataset == "brain":
+                args.model = BrainCNN().to(args.device)
             else:
                 args.model = FedAvgCNN(in_features=3, num_classes=args.num_classes, dim=10816).to(args.device)
 
@@ -143,10 +146,12 @@ def run(args):
         elif model_str == "AmazonMLP":
             args.model = AmazonMLP().to(args.device)
 
+        elif model_str == "dense121":
+            args.model = torchvision.models.densenet121(pretrained=True, num_classes=args.num_classes).to(args.device)
+            # args.model = DenseNet121(out_size=args.num_classes, drop_rate=0.2).to(args.device)
+
         else:
             raise NotImplementedError
-
-        print(args.model)
 
         # select algorithm
         if args.algorithm == "FedAvg":
