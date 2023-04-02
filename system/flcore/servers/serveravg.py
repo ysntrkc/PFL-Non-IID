@@ -15,9 +15,8 @@ class FedAvg(Server):
         print(f"\nJoin ratio / total clients: {self.join_ratio} / {self.num_clients}")
         print("Finished creating server and clients.")
 
-        # self.load_model()
+        self.load_model()
         self.Budget = []
-
 
     def train(self):
         for i in range(self.global_rounds):
@@ -25,7 +24,7 @@ class FedAvg(Server):
             self.selected_clients = self.select_clients()
             self.send_models()
 
-            if i%self.eval_gap == 0:
+            if i % self.eval_gap == 0:
                 print(f"\n-------------Round number: {i}-------------")
                 print("\nEvaluate global model")
                 self.evaluate()
@@ -42,16 +41,16 @@ class FedAvg(Server):
             self.aggregate_parameters()
 
             self.Budget.append(time.time() - s_t)
-            print('-'*25, 'time cost', '-'*25, self.Budget[-1])
+            print("-" * 25, "time cost", "-" * 25, self.Budget[-1])
 
-            self.save_global_model('/cp')
+            self.save_global_model("/cp", f"gr-{i}")
 
         print("\nBest global accuracy.")
         # self.print_(max(self.rs_test_acc), max(
         #     self.rs_train_acc), min(self.rs_train_loss))
         print(max(self.rs_test_acc))
         print("\nAverage time cost per round.")
-        print(sum(self.Budget[1:])/len(self.Budget[1:]))
+        print(sum(self.Budget[1:]) / len(self.Budget[1:]))
 
         self.save_results()
         self.save_global_model()
