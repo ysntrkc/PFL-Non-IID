@@ -147,7 +147,10 @@ def run(args):
             args.model = AmazonMLP().to(args.device)
 
         elif model_str == "dense121":
-            args.model = torchvision.models.densenet121(pretrained=True, num_classes=args.num_classes).to(args.device)
+            args.model = torchvision.models.densenet121(pretrained=True).to(args.device)
+            feature_dim = list(args.model.classifier.parameters())[0].shape[1]
+            args.model.classifier = nn.Linear(feature_dim, args.num_classes).to(args.device)
+
             # args.model = DenseNet121(out_size=args.num_classes, drop_rate=0.2).to(args.device)
 
         else:

@@ -1,0 +1,20 @@
+==================================================
+Algorithm: FedAvg
+Local batch size: 16
+Local steps: 10
+Local learing rate: 0.005
+Total number of clients: 100
+Clients join in each round: 1.0
+Client drop rate: 0.0
+Time select: False
+Time threthold: 10000
+Global rounds: 300
+Running times: 1
+Dataset: brain
+Local model: dense121
+Using device: cuda
+Cuda device id: 0
+==================================================
+
+============= Running time: 0th =============
+Creating server and clients ...

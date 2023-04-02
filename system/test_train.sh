@@ -60,4 +60,8 @@
 # python -u main.py -lbs 64 -nc 100 -jr 0.1 -nb 10 -data Cifar10 -m resnet -algo FedAvg -gr 150 -did 0 -go resnet -ls 10 > out/cifar_fedavg_13_noniid_res.out 2>&1 &
 # python -u main.py -lbs 128 -nc 100 -jr 0.1 -nb 10 -data Cifar10 -m resnet -algo FedAvg -gr 150 -did 1 -go resnet -ls 10 > out/cifar_fedavg_14_noniid_res.out 2>&1 &
 
-python -u main.py -lbs 24 -nc 100 -jr 0.1 -nb 5 -data brain -m resnet -algo FedAvg -gr 50 -did 0 -go resnet -ls 5 > out/brain/fedavg_2_iid_res.out 2>&1 &
+# python -u main.py -lbs 24 -nc 100 -jr 0.1 -nb 5 -data brain -m resnet -algo FedAvg -gr 50 -did 0 -go resnet -ls 5 > out/brain/fedavg_2_iid_res.out 2>&1 &
+
+python -u main.py -lbs 16 -nc 100 -jr 0.1 -nb 5 -data brain -m dense121 -algo FedAvg -gr 300 -did 0 -go dense121 -ls 10 > out/brain/fedavg_dense_5_iid.out 2>&1 &
+
+python -u main.py -lbs 16 -nc 100 -jr 1 -nb 5 -data brain -m dense121 -algo FedAvg -gr 300 -did 0 -go dense121 -ls 10 > out/brain/fedavg_dense_6_iid.out 2>&1 &

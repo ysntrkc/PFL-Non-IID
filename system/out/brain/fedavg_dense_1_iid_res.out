@@ -1,6 +1,6 @@
 ==================================================
 Algorithm: FedAvg
-Local batch size: 24
+Local batch size: 18
 Local steps: 5
 Local learing rate: 0.005
 Total number of clients: 100
@@ -18,19 +18,126 @@ Cuda device id: 0
 
 ============= Running time: 0th =============
 Creating server and clients ...
-Traceback (most recent call last):
-  File "main.py", line 388, in <module>
-    run(args)
-  File "main.py", line 150, in run
-    args.model = torchvision.models.densenet121(pretrained=True, num_classes=args.num_classes).to(args.device)
-  File "/home/undergrad/miniconda3/envs/fl_torch/lib/python3.8/site-packages/torchvision/models/densenet.py", line 267, in densenet121
-    return _densenet('densenet121', 32, (6, 12, 24, 16), 64, pretrained, progress,
-  File "/home/undergrad/miniconda3/envs/fl_torch/lib/python3.8/site-packages/torchvision/models/densenet.py", line 253, in _densenet
-    _load_state_dict(model, model_urls[arch], progress)
-  File "/home/undergrad/miniconda3/envs/fl_torch/lib/python3.8/site-packages/torchvision/models/densenet.py", line 239, in _load_state_dict
-    model.load_state_dict(state_dict)
-  File "/home/undergrad/miniconda3/envs/fl_torch/lib/python3.8/site-packages/torch/nn/modules/module.py", line 1223, in load_state_dict
-    raise RuntimeError('Error(s) in loading state_dict for {}:\n\t{}'.format(
-RuntimeError: Error(s) in loading state_dict for DenseNet:
-	size mismatch for classifier.weight: copying a param with shape torch.Size([1000, 1024]) from checkpoint, the shape in current model is torch.Size([5, 1024]).
-	size mismatch for classifier.bias: copying a param with shape torch.Size([1000]) from checkpoint, the shape in current model is torch.Size([5]).
+
+Join ratio / total clients: 0.1 / 100
+Finished creating server and clients.
+
+-------------Round number: 0-------------
+
+Evaluate global model
+Averaged Train Loss: 1.5098
+Averaged Test Accurancy: 0.2872
+Averaged Test AUC: 0.6590
+Std Test Accurancy: 0.0632
+Std Test AUC: 0.0424
+------------------------- time cost ------------------------- 135.51599526405334
+
+-------------Round number: 1-------------
+
+Evaluate global model
+Averaged Train Loss: 1.4300
+Averaged Test Accurancy: 0.2865
+Averaged Test AUC: 0.7177
+Std Test Accurancy: 0.0770
+Std Test AUC: 0.0358
+------------------------- time cost ------------------------- 135.61709928512573
+
+-------------Round number: 2-------------
+
+Evaluate global model
+Averaged Train Loss: 1.4560
+Averaged Test Accurancy: 0.3307
+Averaged Test AUC: 0.7335
+Std Test Accurancy: 0.0845
+Std Test AUC: 0.0390
+------------------------- time cost ------------------------- 135.8199164867401
+
+-------------Round number: 3-------------
+
+Evaluate global model
+Averaged Train Loss: 1.3903
+Averaged Test Accurancy: 0.4011
+Averaged Test AUC: 0.7513
+Std Test Accurancy: 0.0817
+Std Test AUC: 0.0457
+------------------------- time cost ------------------------- 135.6920313835144
+
+-------------Round number: 4-------------
+
+Evaluate global model
+Averaged Train Loss: 1.4415
+Averaged Test Accurancy: 0.4333
+Averaged Test AUC: 0.7612
+Std Test Accurancy: 0.0855
+Std Test AUC: 0.0503
+------------------------- time cost ------------------------- 135.82138180732727
+
+-------------Round number: 5-------------
+
+Evaluate global model
+Averaged Train Loss: 1.5217
+Averaged Test Accurancy: 0.4392
+Averaged Test AUC: 0.7601
+Std Test Accurancy: 0.0830
+Std Test AUC: 0.0543
+------------------------- time cost ------------------------- 135.9189305305481
+
+-------------Round number: 6-------------
+
+Evaluate global model
+Averaged Train Loss: 1.5793
+Averaged Test Accurancy: 0.4422
+Averaged Test AUC: 0.7569
+Std Test Accurancy: 0.1056
+Std Test AUC: 0.0629
+------------------------- time cost ------------------------- 142.28928446769714
+
+-------------Round number: 7-------------
+
+Evaluate global model
+Averaged Train Loss: 1.6940
+Averaged Test Accurancy: 0.4413
+Averaged Test AUC: 0.7397
+Std Test Accurancy: 0.0928
+Std Test AUC: 0.0722
+------------------------- time cost ------------------------- 135.93930983543396
+
+-------------Round number: 8-------------
+
+Evaluate global model
+Averaged Train Loss: 1.5903
+Averaged Test Accurancy: 0.4726
+Averaged Test AUC: 0.7693
+Std Test Accurancy: 0.1016
+Std Test AUC: 0.0675
+------------------------- time cost ------------------------- 135.91935539245605
+
+-------------Round number: 9-------------
+
+Evaluate global model
+Averaged Train Loss: 1.5591
+Averaged Test Accurancy: 0.4935
+Averaged Test AUC: 0.7863
+Std Test Accurancy: 0.0943
+Std Test AUC: 0.0648
+------------------------- time cost ------------------------- 142.53964710235596
+
+Best global accuracy.
+0.49353093389790637
+
+Average time cost per round.
+137.28410625457764
+File path: ../results/brain_FedAvg_dense121_gr10_ls5_bs18_lr0.005.h5
+
+Average time cost: 1423.34s.
+Length:  10
+std for best accurancy: 0.0
+mean for best accurancy: 0.49353093389790637
+All done!
+
+Storage on cuda:0
+-------------------------------------------------------------------------------
+Total Tensors: 1198530189 	Used Memory: 4.48G
+The allocated memory on cuda:0: 4.48G
+Memory differs due to the matrix alignment or invisible gradient buffer tensors
+-------------------------------------------------------------------------------
