@@ -64,4 +64,4 @@
 
 python -u main.py -lbs 16 -nc 100 -jr 0.1 -nb 5 -data brain -m dense121 -algo FedAvg -gr 300 -did 0 -go dense121 -ls 10 > out/brain/fedavg_dense_5_iid.out 2>&1 &
 
-python -u main.py -lbs 16 -nc 100 -jr 1 -nb 5 -data brain -m dense121 -algo FedAvg -gr 300 -did 0 -go dense121 -ls 10 > out/brain/fedavg_dense_6_iid.out 2>&1 &
+python -u main.py -lbs 24 -nc 10 -jr 1 -nb 5 -data brain_16 -m dense121 -algo FedAvg -gr 300 -did 0 -go dense121 -ls 10 > out/brain/fedavg_dense_6_iid.out 2>&1 &

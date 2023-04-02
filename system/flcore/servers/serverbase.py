@@ -92,7 +92,7 @@ class Server(object):
 
         for client in self.clients:
             start_time = time.time()
-            
+
             client.set_parameters(self.global_model)
 
             client.send_time_cost['num_rounds'] += 1
@@ -131,8 +131,9 @@ class Server(object):
         for server_param, client_param in zip(self.global_model.parameters(), client_model.parameters()):
             server_param.data += client_param.data.clone() * w
 
-    def save_global_model(self):
+    def save_global_model(self, folder_name = ''):
         model_path = os.path.join("models", self.dataset)
+        model_path += folder_name
         if not os.path.exists(model_path):
             os.makedirs(model_path)
         model_path = os.path.join(model_path, self.algorithm + "_server" + ".pt")
