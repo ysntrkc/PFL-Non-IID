@@ -15,7 +15,9 @@ class FedAvg(Server):
         print(f"\nJoin ratio / total clients: {self.join_ratio} / {self.num_clients}")
         print("Finished creating server and clients.")
 
-        self.load_model()
+        if args.load_model:
+            self.load_model()
+
         self.Budget = []
 
     def train(self):
