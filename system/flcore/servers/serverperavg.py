@@ -40,13 +40,15 @@ class PerAvg(Server):
             self.receive_models()
             self.aggregate_parameters()
 
-        print("\nBest global accuracy.")
+            if self.auto_break and self.check_done(acc_lss=[self.rs_test_acc], top_cnt=self.top_cnt):
+                break
+
+        print("\nBest accuracy.")
         # self.print_(max(self.rs_test_acc), max(
         #     self.rs_train_acc), min(self.rs_train_loss))
         print(max(self.rs_test_acc))
 
         self.save_results()
-        self.save_global_model()
 
 
     def evaluate_one_step(self):

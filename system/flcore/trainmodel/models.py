@@ -4,12 +4,13 @@ import torch.nn.functional as F
 from torch.nn import TransformerEncoder, TransformerEncoderLayer
 from torch import nn, Tensor
 
-batch_size = 16
+batch_size = 10
 
 
-class LocalModel(nn.Module):
+# split an original model into a base and a head
+class BaseHeadSplit(nn.Module):
     def __init__(self, base, head):
-        super(LocalModel, self).__init__()
+        super(BaseHeadSplit, self).__init__()
 
         self.base = base
         self.predictor = predictor

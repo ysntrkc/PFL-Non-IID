@@ -29,6 +29,9 @@ from flcore.servers.serverdyn import FedDyn
 from flcore.servers.servermoon import MOON
 from flcore.servers.serverbabu import FedBABU
 from flcore.servers.serverapple import APPLE
+from flcore.servers.servergen import FedGen
+from flcore.servers.serverscaffold import SCAFFOLD
+from flcore.servers.serverdistill import FedDistill
 
 from flcore.trainmodel.models import *
 from flcore.trainmodel.dense_models import *
@@ -40,6 +43,10 @@ from flcore.trainmodel.alexnet import alexnet
 from flcore.trainmodel.mobilenet_v2 import mobilenet_v2
 from utils.result_utils import average_data
 from utils.mem_utils import MemReporter
+from flcore.trainmodel.bilstm import *
+from flcore.trainmodel.resnet import *
+from flcore.trainmodel.alexnet import *
+from flcore.trainmodel.mobilenet_v2 import *
 
 logger = logging.getLogger()
 logger.setLevel(logging.ERROR)
@@ -92,7 +99,7 @@ def run(args):
                     in_features=3, num_classes=args.num_classes, dim=1600
                 ).to(args.device)
                 # args.model = CifarNet(num_classes=args.num_classes).to(args.device)
-            elif args.dataset == "Digit5":
+            elif "Digit5" in args.dataset:
                 args.model = Digit5CNN().to(args.device)
             elif args.dataset == "brain":
                 args.model = BrainCNN().to(args.device)
@@ -196,6 +203,24 @@ def run(args):
         elif model_str == "AmazonMLP":
             args.model = AmazonMLP().to(args.device)
 
+        elif model_str == "harcnn":
+            if args.dataset == "har":
+                args.model = HARCNN(
+                    9,
+                    dim_hidden=1664,
+                    num_classes=args.num_classes,
+                    conv_kernel_size=(1, 9),
+                    pool_kernel_size=(1, 2),
+                ).to(args.device)
+            elif args.dataset == "pamap":
+                args.model = HARCNN(
+                    9,
+                    dim_hidden=3712,
+                    num_classes=args.num_classes,
+                    conv_kernel_size=(1, 9),
+                    pool_kernel_size=(1, 2),
+                ).to(args.device)
+
         elif model_str == "dense121":
             args.model = torchvision.models.densenet121(pretrained=True).to(args.device)
             feature_dim = list(args.model.classifier.parameters())[0].shape[1]
@@ -210,6 +235,9 @@ def run(args):
 
         # select algorithm
         if args.algorithm == "FedAvg":
+            args.head = copy.deepcopy(args.model.fc)
+            args.model.fc = nn.Identity()
+            args.model = BaseHeadSplit(args.model, args.head)
             server = FedAvg(args, i)
 
         elif args.algorithm == "Local":
@@ -239,7 +267,7 @@ def run(args):
         elif args.algorithm == "FedPer":
             args.head = copy.deepcopy(args.model.fc)
             args.model.fc = nn.Identity()
-            args.model = LocalModel(args.model, args.head)
+            args.model = BaseHeadSplit(args.model, args.head)
             server = FedPer(args, i)
 
         elif args.algorithm == "Ditto":
@@ -248,13 +276,13 @@ def run(args):
         elif args.algorithm == "FedRep":
             args.head = copy.deepcopy(args.model.fc)
             args.model.fc = nn.Identity()
-            args.model = LocalModel(args.model, args.head)
+            args.model = BaseHeadSplit(args.model, args.head)
             server = FedRep(args, i)
 
         elif args.algorithm == "FedPHP":
             args.head = copy.deepcopy(args.model.fc)
             args.model.fc = nn.Identity()
-            args.model = LocalModel(args.model, args.head)
+            args.model = BaseHeadSplit(args.model, args.head)
             server = FedPHP(args, i)
 
         elif args.algorithm == "FedBN":
@@ -263,13 +291,13 @@ def run(args):
         elif args.algorithm == "FedROD":
             args.head = copy.deepcopy(args.model.fc)
             args.model.fc = nn.Identity()
-            args.model = LocalModel(args.model, args.head)
+            args.model = BaseHeadSplit(args.model, args.head)
             server = FedROD(args, i)
 
         elif args.algorithm == "FedProto":
             args.head = copy.deepcopy(args.model.fc)
             args.model.fc = nn.Identity()
-            args.model = LocalModel(args.model, args.head)
+            args.model = BaseHeadSplit(args.model, args.head)
             server = FedProto(args, i)
 
         elif args.algorithm == "FedDyn":
@@ -278,17 +306,29 @@ def run(args):
         elif args.algorithm == "MOON":
             args.head = copy.deepcopy(args.model.fc)
             args.model.fc = nn.Identity()
-            args.model = LocalModel(args.model, args.head)
+            args.model = BaseHeadSplit(args.model, args.head)
             server = MOON(args, i)
 
         elif args.algorithm == "FedBABU":
             args.head = copy.deepcopy(args.model.fc)
             args.model.fc = nn.Identity()
-            args.model = LocalModel(args.model, args.head)
+            args.model = BaseHeadSplit(args.model, args.head)
             server = FedBABU(args, i)
 
         elif args.algorithm == "APPLE":
             server = APPLE(args, i)
+
+        elif args.algorithm == "FedGen":
+            args.head = copy.deepcopy(args.model.fc)
+            args.model.fc = nn.Identity()
+            args.model = BaseHeadSplit(args.model, args.head)
+            server = FedGen(args, i)
+
+        elif args.algorithm == "SCAFFOLD":
+            server = SCAFFOLD(args, i)
+
+        elif args.algorithm == "FedDistill":
+            server = FedDistill(args, i)
 
         else:
             raise NotImplementedError
@@ -316,9 +356,6 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
     # general
-    parser.add_argument(
-        "-lm", "--load_model", type=bool, default=False, help="Load model"
-    )
     parser.add_argument(
         "-go", "--goal", type=str, default="test", help="The goal for this experiment"
     )
@@ -490,19 +527,34 @@ if __name__ == "__main__":
     print("Local batch size: {}".format(args.batch_size))
     print("Local steps: {}".format(args.local_steps))
     print("Local learing rate: {}".format(args.local_learning_rate))
+    print("Local learing rate decay: {}".format(args.learning_rate_decay))
+    if args.learning_rate_decay:
+        print(
+            "Local learing rate decay gamma: {}".format(args.learning_rate_decay_gamma)
+        )
     print("Total number of clients: {}".format(args.num_clients))
     print("Clients join in each round: {}".format(args.join_ratio))
+    print("Clients randomly join: {}".format(args.random_join_ratio))
     print("Client drop rate: {}".format(args.client_drop_rate))
-    print("Time select: {}".format(args.time_select))
-    print("Time threthold: {}".format(args.time_threthold))
-    print("Global rounds: {}".format(args.global_rounds))
+    print("Client select regarding time: {}".format(args.time_select))
+    if args.time_select:
+        print("Time threthold: {}".format(args.time_threthold))
     print("Running times: {}".format(args.times))
     print("Dataset: {}".format(args.dataset))
-    print("Local model: {}".format(args.model))
+    print("Number of classes: {}".format(args.num_classes))
+    print("Backbone: {}".format(args.model))
     print("Using device: {}".format(args.device))
-
+    print("Using DP: {}".format(args.privacy))
+    if args.privacy:
+        print("Sigma for DP: {}".format(args.dp_sigma))
+    print("Auto break: {}".format(args.auto_break))
+    if not args.auto_break:
+        print("Global rounds: {}".format(args.global_rounds))
     if args.device == "cuda":
         print("Cuda device id: {}".format(os.environ["CUDA_VISIBLE_DEVICES"]))
+    print("DLG attack evaluate: {}".format(args.dlg_eval))
+    if args.dlg_eval:
+        print("DLG attack evaluate round gap: {}".format(args.dlg_gap))
     print("=" * 50)
 
     # if args.dataset == "mnist" or args.dataset == "fmnist":

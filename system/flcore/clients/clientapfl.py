@@ -11,13 +11,14 @@ from sklearn import metrics
 class clientAPFL(Client):
     def __init__(self, args, id, train_samples, test_samples, **kwargs):
         super().__init__(args, id, train_samples, test_samples, **kwargs)
-        
-        self.loss = nn.CrossEntropyLoss()
-        self.optimizer = torch.optim.SGD(self.model.parameters(), lr=self.learning_rate)
 
         self.alpha = args.alpha
         self.model_per = copy.deepcopy(self.model)
         self.optimizer_per = torch.optim.SGD(self.model_per.parameters(), lr=self.learning_rate)
+        self.learning_rate_scheduler_per = torch.optim.lr_scheduler.ExponentialLR(
+            optimizer=self.optimizer_per, 
+            gamma=args.learning_rate_decay_gamma
+        )
 
     def train(self):
         trainloader = self.load_train_data()
@@ -26,6 +27,7 @@ class clientAPFL(Client):
 
         # self.model.to(self.device)
         self.model.train()
+        self.model_per.train()
 
         max_local_steps = self.local_steps
         if self.train_slow:
@@ -56,6 +58,10 @@ class clientAPFL(Client):
 
         for lp, p in zip(self.model_per.parameters(), self.model.parameters()):
             lp.data = (1 - self.alpha) * p + self.alpha * lp
+
+        if self.learning_rate_decay:
+            self.learning_rate_scheduler.step()
+            self.learning_rate_scheduler_per.step()
 
         self.train_time_cost['num_rounds'] += 1
         self.train_time_cost['total_cost'] += time.time() - start_time
@@ -102,3 +108,23 @@ class clientAPFL(Client):
         auc = metrics.roc_auc_score(y_true, y_prob, average='micro')
         
         return test_acc, test_num, auc
+
+    def train_metrics(self):
+        trainloader = self.load_train_data()
+        self.model_per.train()
+
+        train_num = 0
+        losses = 0
+        with torch.no_grad():
+            for x, y in trainloader:
+                if type(x) == type([]):
+                    x[0] = x[0].to(self.device)
+                else:
+                    x = x.to(self.device)
+                y = y.to(self.device)
+                output_per = self.model_per(x)
+                loss_per = self.loss(output_per, y)
+                train_num += y.shape[0]
+                losses += loss_per.item() * y.shape[0]
+
+        return losses, train_num
