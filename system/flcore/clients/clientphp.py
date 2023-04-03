@@ -9,9 +9,6 @@ from flcore.clients.clientbase import Client
 class clientPHP(Client):
     def __init__(self, args, id, train_samples, test_samples, **kwargs):
         super().__init__(args, id, train_samples, test_samples, **kwargs)
-        
-        self.loss = nn.CrossEntropyLoss()
-        self.optimizer = torch.optim.SGD(self.model.parameters(), lr=self.learning_rate)
 
         self.mu = args.mu / args.global_rounds
         self.lamda = args.lamda
@@ -51,6 +48,9 @@ class clientPHP(Client):
 
         # self.model.cpu()
 
+        if self.learning_rate_decay:
+            self.learning_rate_scheduler.step()
+
         self.train_time_cost['num_rounds'] += 1
         self.train_time_cost['total_cost'] += time.time() - start_time
 
@@ -63,6 +63,32 @@ class clientPHP(Client):
 
         for new_param, old_param in zip(model.parameters(), self.model.parameters()):
             old_param.data = new_param * (1 - mu) + old_param * mu
+
+    def train_metrics(self):
+        trainloader = self.load_train_data()
+        # self.model = self.load_model('model')
+        # self.model.to(self.device)
+        self.model.eval()
+
+        train_num = 0
+        losses = 0
+        with torch.no_grad():
+            for x, y in trainloader:
+                if type(x) == type([]):
+                    x[0] = x[0].to(self.device)
+                else:
+                    x = x.to(self.device)
+                y = y.to(self.device)
+                output = self.model(x)                
+                loss = self.loss(output, y) * (1 - self.lamda)
+                loss += MMD(self.model.base(x), self.model_s.base(x), 'rbf', self.device) * self.lamda
+                train_num += y.shape[0]
+                losses += loss.item() * y.shape[0]
+
+        # self.model.cpu()
+        # self.save_model(self.model, 'model')
+
+        return losses, train_num
             
 
 def MMD(x, y, kernel, device='cpu'):

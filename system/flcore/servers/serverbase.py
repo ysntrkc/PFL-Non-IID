@@ -7,6 +7,7 @@ import time
 import random
 
 from utils.data_utils import read_client_data
+from utils.dlg import DLG
 
 
 class Server(object):
@@ -14,6 +15,7 @@ class Server(object):
         # Set up the main attributes
         self.device = args.device
         self.dataset = args.dataset
+        self.num_classes = args.num_classes
         self.global_rounds = args.global_rounds
         self.local_steps = args.local_steps
         self.batch_size = args.batch_size
@@ -22,13 +24,14 @@ class Server(object):
         self.num_clients = args.num_clients
         self.join_ratio = args.join_ratio
         self.random_join_ratio = args.random_join_ratio
-        self.join_clients = int(self.num_clients * self.join_ratio)
+        self.num_join_clients = int(self.num_clients * self.join_ratio)
         self.algorithm = args.algorithm
         self.time_select = args.time_select
         self.goal = args.goal
         self.time_threthold = args.time_threthold
         self.save_folder_name = args.save_folder_name
-        self.top_cnt = 100
+        self.top_cnt = 20
+        self.auto_break = args.auto_break
         self.model = args.model
 
         self.clients = []
@@ -49,6 +52,10 @@ class Server(object):
         self.client_drop_rate = args.client_drop_rate
         self.train_slow_rate = args.train_slow_rate
         self.send_slow_rate = args.send_slow_rate
+
+        self.dlg_eval = args.dlg_eval
+        self.dlg_gap = args.dlg_gap
+        self.batch_num_per_client = args.batch_num_per_client
 
     def set_clients(self, args, clientObj):
         for i, train_slow, send_slow in zip(
@@ -82,14 +89,10 @@ class Server(object):
 
     def select_clients(self):
         if self.random_join_ratio:
-            join_clients = np.random.choice(
-                range(self.join_clients, self.num_clients + 1), 1, replace=False
-            )[0]
+            num_join_clients = np.random.choice(range(self.num_join_clients, self.num_clients+1), 1, replace=False)[0]
         else:
-            join_clients = self.join_clients
-        selected_clients = list(
-            np.random.choice(self.clients, join_clients, replace=False)
-        )
+            num_join_clients = self.num_join_clients
+        selected_clients = list(np.random.choice(self.clients, num_join_clients, replace=False))
 
         return selected_clients
 
@@ -108,21 +111,21 @@ class Server(object):
         assert len(self.selected_clients) > 0
 
         active_clients = random.sample(
-            self.selected_clients, int((1 - self.client_drop_rate) * self.join_clients)
-        )
+            self.selected_clients, int((1-self.client_drop_rate) * self.num_join_clients))
 
+        self.uploaded_ids = []
         self.uploaded_weights = []
         self.uploaded_models = []
         tot_samples = 0
         for client in active_clients:
-            client_time_cost = (
-                client.train_time_cost["total_cost"]
-                / client.train_time_cost["num_rounds"]
-                + client.send_time_cost["total_cost"]
-                / client.send_time_cost["num_rounds"]
-            )
+            try:
+                client_time_cost = client.train_time_cost['total_cost'] / client.train_time_cost['num_rounds'] + \
+                        client.send_time_cost['total_cost'] / client.send_time_cost['num_rounds']
+            except ZeroDivisionError:
+                client_time_cost = 0
             if client_time_cost <= self.time_threthold:
                 tot_samples += client.train_samples
+                self.uploaded_ids.append(client.id)
                 self.uploaded_weights.append(client.train_samples)
                 self.uploaded_models.append(client.model)
         for i, w in enumerate(self.uploaded_weights):
@@ -279,3 +282,39 @@ class Server(object):
             else:
                 raise NotImplementedError
         return True
+
+    def call_dlg(self, R):
+        items = []
+        cnt = 0
+        psnr_val = 0
+        for client in self.selected_clients:
+            client_model = client.model.base
+            origin_grad = []
+            for gp, pp in zip(self.global_model.parameters(), client_model.parameters()):
+                origin_grad.append(gp.data - pp.data)
+
+            target_inputs = []
+            trainloader = client.load_train_data()
+            with torch.no_grad():
+                for i, (x, y) in enumerate(trainloader):
+                    if type(x) == type([]):
+                        x[0] = x[0].to(self.device)
+                    else:
+                        x = x.to(self.device)
+                    y = y.to(self.device)
+                    output = client_model(x)
+                    target_inputs.append((x, output))
+
+            d = DLG(client_model, origin_grad, target_inputs[:self.batch_num_per_client])
+            if d is not None:
+                psnr_val += d
+                cnt += 1
+
+            items.append((client_model, origin_grad, target_inputs))
+
+        if cnt > 0:
+            print('PSNR value is {:.2f} dB'.format(psnr_val / cnt))
+        else:
+            print('PSNR error')
+
+        self.save_item(items, f'DLG_{R}')

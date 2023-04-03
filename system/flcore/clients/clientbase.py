@@ -45,18 +45,26 @@ class Client(object):
         self.dp_sigma = args.dp_sigma
         self.sample_rate = self.batch_size / self.train_samples
 
+        self.loss = nn.CrossEntropyLoss()
+        self.optimizer = torch.optim.SGD(self.model.parameters(), lr=self.learning_rate)
+        self.learning_rate_scheduler = torch.optim.lr_scheduler.ExponentialLR(
+            optimizer=self.optimizer, 
+            gamma=args.learning_rate_decay_gamma
+        )
+        self.learning_rate_decay = args.learning_rate_decay
+
 
     def load_train_data(self, batch_size=None):
         if batch_size == None:
             batch_size = self.batch_size
         train_data = read_client_data(self.dataset, self.id, is_train=True)
-        return DataLoader(train_data, batch_size, drop_last=True, shuffle=True)
+        return DataLoader(train_data, batch_size, drop_last=True, shuffle=False)
 
     def load_test_data(self, batch_size=None):
         if batch_size == None:
             batch_size = self.batch_size
         test_data = read_client_data(self.dataset, self.id, is_train=False)
-        return DataLoader(test_data, batch_size, drop_last=False, shuffle=True)
+        return DataLoader(test_data, batch_size, drop_last=False, shuffle=False)
         
     def set_parameters(self, model):
         for new_param, old_param in zip(model.parameters(), self.model.parameters()):
@@ -120,21 +128,23 @@ class Client(object):
         self.model.eval()
 
         train_num = 0
-        loss = 0
-        for x, y in trainloader:
-            if type(x) == type([]):
-                x[0] = x[0].to(self.device)
-            else:
-                x = x.to(self.device)
-            y = y.to(self.device)
-            output = self.model(x)
-            train_num += y.shape[0]
-            loss += self.loss(output, y).item() * y.shape[0]
+        losses = 0
+        with torch.no_grad():
+            for x, y in trainloader:
+                if type(x) == type([]):
+                    x[0] = x[0].to(self.device)
+                else:
+                    x = x.to(self.device)
+                y = y.to(self.device)
+                output = self.model(x)
+                loss = self.loss(output, y)
+                train_num += y.shape[0]
+                losses += loss.item() * y.shape[0]
 
         # self.model.cpu()
         # self.save_model(self.model, 'model')
 
-        return loss, train_num
+        return losses, train_num
 
     # def get_next_train_batch(self):
     #     try:

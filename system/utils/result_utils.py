@@ -3,11 +3,8 @@ import numpy as np
 import os
 
 
-def average_data(args, length=800):
-    test_acc = get_all_results_for_one_algo(
-        args, int(length))
-    test_acc_data = np.average(test_acc, axis=0)
-
+def average_data(algorithm="", dataset="", goal="", times=10):
+    test_acc = get_all_results_for_one_algo(algorithm, dataset, goal, times)
 
     max_accurancy = []
     for i in range(args.times):
@@ -17,13 +14,12 @@ def average_data(args, length=800):
     print("mean for best accurancy:", np.mean(max_accurancy))
 
 
-def get_all_results_for_one_algo(args, length=800):
-    test_acc = np.zeros((args.times, length))
-    algo = args.dataset + "_" + args.algorithm
-    for i in range(args.times):
-        file_name = f"{algo}_{args.goal}_gr{args.global_rounds}_ls{args.local_steps}_bs{args.batch_size}_lr{args.local_learning_rate}"
-        test_acc[i, :] = np.array(
-            read_data_then_delete(file_name, delete=False))[:length]
+def get_all_results_for_one_algo(algorithm="", dataset="", goal="", times=10):
+    test_acc = []
+    algorithms_list = [algorithm] * times
+    for i in range(times):
+        file_name = dataset + "_" + algorithms_list[i] + "_" + goal + "_" + str(i)
+        test_acc.append(np.array(read_data_then_delete(file_name, delete=False)))
 
     return test_acc
 

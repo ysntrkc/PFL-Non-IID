@@ -3,7 +3,7 @@ import copy
 import time
 import numpy as np
 import math
-from flcore.clients.clientamp import clientAMP, weight_flatten
+from flcore.clients.clientamp import clientAMP
 from flcore.servers.serverbase import Server
 from threading import Thread
 
@@ -29,7 +29,7 @@ class FedAMP(Server):
 
             if i%self.eval_gap == 0:
                 print(f"\n-------------Round number: {i}-------------")
-                print("\nEvaluate global model")
+                print("\nEvaluate personalized models")
                 self.evaluate()
 
             for client in self.selected_clients:
@@ -42,13 +42,15 @@ class FedAMP(Server):
 
             self.receive_models()
 
-        print("\nBest global accuracy.")
+            if self.auto_break and self.check_done(acc_lss=[self.rs_test_acc], top_cnt=self.top_cnt):
+                break
+
+        print("\nBest accuracy.")
         # self.print_(max(self.rs_test_acc), max(
         #     self.rs_train_acc), min(self.rs_train_loss))
         print(max(self.rs_test_acc))
 
         self.save_results()
-        self.save_global_model()
 
 
     def send_models(self):
@@ -60,11 +62,11 @@ class FedAMP(Server):
                 for param in mu.parameters():
                     param.data.zero_()
 
-                coef = torch.zeros(self.join_clients)
+                coef = torch.zeros(self.num_join_clients)
                 for j, mw in enumerate(self.uploaded_models):
                     if c.id != self.uploaded_ids[j]:
-                        weights_i = weight_flatten(c.model)
-                        weights_j = weight_flatten(mw)
+                        weights_i = torch.cat([p.data.view(-1) for p in c.model.parameters()], dim=0)
+                        weights_j = torch.cat([p.data.view(-1) for p in mw.parameters()], dim=0)
                         sub = (weights_i - weights_j).view(-1)
                         sub = torch.dot(sub, sub)
                         coef[j] = self.alphaK * self.e(sub)
@@ -86,6 +88,7 @@ class FedAMP(Server):
 
                 c.send_time_cost['num_rounds'] += 1
                 c.send_time_cost['total_cost'] += 2 * (time.time() - start_time)
+
 
     def e(self, x):
         return math.exp(-x/self.sigma)/self.sigma

@@ -25,7 +25,7 @@ class FedPer(Server):
 
             if i%self.eval_gap == 0:
                 print(f"\n-------------Round number: {i}-------------")
-                print("\nEvaluate global model")
+                print("\nEvaluate personalized models")
                 self.evaluate()
 
             for client in self.selected_clients:
@@ -39,20 +39,22 @@ class FedPer(Server):
             self.receive_models()
             self.aggregate_parameters()
 
-        print("\nBest global accuracy.")
+            if self.auto_break and self.check_done(acc_lss=[self.rs_test_acc], top_cnt=self.top_cnt):
+                break
+
+        print("\nBest accuracy.")
         # self.print_(max(self.rs_test_acc), max(
         #     self.rs_train_acc), min(self.rs_train_loss))
         print(max(self.rs_test_acc))
 
         self.save_results()
-        self.save_global_model()
 
 
     def receive_models(self):
         assert (len(self.selected_clients) > 0)
 
         active_clients = random.sample(
-            self.selected_clients, int((1-self.client_drop_rate) * self.join_clients))
+            self.selected_clients, int((1-self.client_drop_rate) * self.num_join_clients))
 
         self.uploaded_weights = []
         self.uploaded_models = []
