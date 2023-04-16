@@ -235,9 +235,9 @@ def run(args):
 
         # select algorithm
         if args.algorithm == "FedAvg":
-            args.head = copy.deepcopy(args.model.fc)
-            args.model.fc = nn.Identity()
-            args.model = BaseHeadSplit(args.model, args.head)
+            # args.head = copy.deepcopy(args.model.fc)
+            # args.model.fc = nn.Identity()
+            # args.model = BaseHeadSplit(args.model, args.head)
             server = FedAvg(args, i)
 
         elif args.algorithm == "Local":
@@ -357,6 +357,9 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     # general
     parser.add_argument(
+        "-lm", "--load_model", type=bool, default=False, help="Load model"
+    )
+    parser.add_argument(
         "-go", "--goal", type=str, default="test", help="The goal for this experiment"
     )
     parser.add_argument(
@@ -375,6 +378,8 @@ if __name__ == "__main__":
         default=0.005,
         help="Local learning rate",
     )
+    parser.add_argument('-ld', "--learning_rate_decay", type=bool, default=False)
+    parser.add_argument('-ldg', "--learning_rate_decay_gamma", type=float, default=0.99)
     parser.add_argument("-gr", "--global_rounds", type=int, default=1000)
     parser.add_argument("-ls", "--local_steps", type=int, default=1)
     parser.add_argument("-algo", "--algorithm", type=str, default="FedAvg")
@@ -407,6 +412,10 @@ if __name__ == "__main__":
     )
     parser.add_argument("-dps", "--dp_sigma", type=float, default=0.0)
     parser.add_argument("-sfn", "--save_folder_name", type=str, default="models")
+    parser.add_argument('-ab', "--auto_break", type=bool, default=False)
+    parser.add_argument('-dlg', "--dlg_eval", type=bool, default=False)
+    parser.add_argument('-dlgg', "--dlg_gap", type=int, default=100)
+    parser.add_argument('-bnpc', "--batch_num_per_client", type=int, default=2)
     # practical
     parser.add_argument(
         "-cdr",
@@ -512,7 +521,6 @@ if __name__ == "__main__":
     # APPLE
     parser.add_argument("-dlr", "--dr_learning_rate", type=float, default=0.0)
     parser.add_argument("-L", "--L", type=float, default=1.0)
-
     args = parser.parse_args()
 
     os.environ["CUDA_VISIBLE_DEVICES"] = args.device_id

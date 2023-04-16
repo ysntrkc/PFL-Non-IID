@@ -8,7 +8,7 @@ import os
 
 __all__ = ['DenseNet', 'densenet121', 'densenet169', 'densenet201', 'densenet161']
 
-os.environ['TORCH_HOME'] = '/media/undergrad/Data/tubitak-code/nf/models'
+os.environ['TORCH_HOME'] = '/media/muhendislik/HDD1/undergrad/models'
 
 model_urls = {
     'densenet121': 'https://download.pytorch.org/models/densenet121-a639ec97.pth',

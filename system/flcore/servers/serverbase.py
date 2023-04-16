@@ -152,7 +152,7 @@ class Server(object):
         model_path += folder_name
         if not os.path.exists(model_path):
             os.makedirs(model_path)
-        model_path = os.path.join(model_path, self.algorithm + "_server" + gr + ".pt")
+        model_path = os.path.join(model_path, self.algorithm + "_server_" + gr + ".pt")
         torch.save(self.global_model, model_path)
 
     def load_model(self):

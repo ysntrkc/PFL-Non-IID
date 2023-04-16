@@ -47,7 +47,8 @@ class FedAvg(Server):
             self.Budget.append(time.time() - s_t)
             print("-" * 25, "time cost", "-" * 25, self.Budget[-1])
 
-            self.save_global_model("/cp", f"gr-{i}")
+            if i % 10 == 0:
+                self.save_global_model()
 
             if self.auto_break and self.check_done(acc_lss=[self.rs_test_acc], top_cnt=self.top_cnt):
                 break

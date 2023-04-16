@@ -4,3 +4,5 @@ dataset/Cifar10*
 dataset/mnist*
 dataset/ham10000*
 dataset/brain*
+.idea
+.vscode
