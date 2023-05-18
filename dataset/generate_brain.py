@@ -1,6 +1,5 @@
 import numpy as np
 import os
-import sys
 import random
 import torch
 import torchvision
@@ -12,7 +11,7 @@ random.seed(1)
 np.random.seed(1)
 num_clients = 10
 num_classes = 5
-dir_path = "/media/muhendislik/HDD1/undergrad/code/FedAvg/dataset/brain/"
+dir_path = os.path.dirname(os.path.realpath(__file__)) + "/brain/"
 
 
 def generate_brain(dir_path, num_clients, num_classes, niid, balance, partition):

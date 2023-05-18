@@ -340,7 +340,9 @@ def run(args):
     print(f"\nAverage time cost: {round(np.average(time_list), 2)}s.")
 
     # Global average
-    average_data(args, length=args.global_rounds / args.eval_gap)
+    average_data(
+        dataset=args.dataset, algorithm=args.algorithm, goal=args.goal, times=args.times, args=args
+    )
 
     print("All done!")
 
@@ -378,8 +380,8 @@ if __name__ == "__main__":
         default=0.005,
         help="Local learning rate",
     )
-    parser.add_argument('-ld', "--learning_rate_decay", type=bool, default=False)
-    parser.add_argument('-ldg', "--learning_rate_decay_gamma", type=float, default=0.99)
+    parser.add_argument("-ld", "--learning_rate_decay", type=bool, default=False)
+    parser.add_argument("-ldg", "--learning_rate_decay_gamma", type=float, default=0.99)
     parser.add_argument("-gr", "--global_rounds", type=int, default=1000)
     parser.add_argument("-ls", "--local_steps", type=int, default=1)
     parser.add_argument("-algo", "--algorithm", type=str, default="FedAvg")
@@ -412,10 +414,10 @@ if __name__ == "__main__":
     )
     parser.add_argument("-dps", "--dp_sigma", type=float, default=0.0)
     parser.add_argument("-sfn", "--save_folder_name", type=str, default="models")
-    parser.add_argument('-ab', "--auto_break", type=bool, default=False)
-    parser.add_argument('-dlg', "--dlg_eval", type=bool, default=False)
-    parser.add_argument('-dlgg', "--dlg_gap", type=int, default=100)
-    parser.add_argument('-bnpc', "--batch_num_per_client", type=int, default=2)
+    parser.add_argument("-ab", "--auto_break", type=bool, default=False)
+    parser.add_argument("-dlg", "--dlg_eval", type=bool, default=False)
+    parser.add_argument("-dlgg", "--dlg_gap", type=int, default=100)
+    parser.add_argument("-bnpc", "--batch_num_per_client", type=int, default=2)
     # practical
     parser.add_argument(
         "-cdr",
