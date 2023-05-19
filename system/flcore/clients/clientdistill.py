@@ -25,7 +25,7 @@ class clientDistill(Client):
         # self.model.to(self.device)
         self.model.train()
 
-        max_local_steps = self.local_steps
+        max_local_steps = self.local_epochs
         if self.train_slow:
             max_local_steps = np.random.randint(1, max_local_steps // 2)
 
@@ -39,21 +39,22 @@ class clientDistill(Client):
                 y = y.to(self.device)
                 if self.train_slow:
                     time.sleep(0.1 * np.abs(np.random.rand()))
-                self.optimizer.zero_grad()
                 output = self.model(x)
                 loss = self.loss(output, y)
 
                 if self.global_logits != None:
-                    logit_new = torch.zeros_like(output)
+                    logit_new = copy.deepcopy(output.detach())
                     for i, yy in enumerate(y):
                         y_c = yy.item()
-                        logit_new[i, :] = self.global_logits[y_c].data
+                        if type(self.global_logits[y_c]) != type([]):
+                            logit_new[i, :] = self.global_logits[y_c].data
                     loss += self.loss_mse(logit_new, output) * self.lamda
 
                 for i, yy in enumerate(y):
                     y_c = yy.item()
                     logits[y_c].append(output[i, :].detach().data)
 
+                self.optimizer.zero_grad()
                 loss.backward()
                 self.optimizer.step()
 
@@ -90,10 +91,11 @@ class clientDistill(Client):
                 loss = self.loss(output, y)
 
                 if self.global_logits != None:
-                    logit_new = torch.zeros_like(output)
+                    logit_new = copy.deepcopy(output.detach())
                     for i, yy in enumerate(y):
                         y_c = yy.item()
-                        logit_new[i, :] = self.global_logits[y_c].data
+                        if type(self.global_logits[y_c]) != type([]):
+                            logit_new[i, :] = self.global_logits[y_c].data
                     loss += self.loss_mse(logit_new, output) * self.lamda
                     
                 train_num += y.shape[0]

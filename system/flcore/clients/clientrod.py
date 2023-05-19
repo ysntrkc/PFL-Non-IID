@@ -35,7 +35,7 @@ class clientROD(Client):
         # self.model.to(self.device)
         self.model.train()
 
-        max_local_steps = self.local_steps
+        max_local_steps = self.local_epochs
         if self.train_slow:
             max_local_steps = np.random.randint(1, max_local_steps // 2)
 
@@ -125,7 +125,7 @@ class clientROD(Client):
                 else:
                     x = x.to(self.device)
                 y = y.to(self.device)
-                rep = self.model(x, rep=True)
+                rep = self.model.base(x)
                 out_g = self.model.head(rep)
                 out_p = self.head(rep.detach())
                 output = out_g.detach() + out_p

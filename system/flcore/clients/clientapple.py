@@ -32,7 +32,7 @@ class clientAPPLE(Client):
         # self.model.to(self.device)
         self.model.train()
 
-        max_local_steps = self.local_steps
+        max_local_steps = self.local_epochs
         if self.train_slow:
             max_local_steps = np.random.randint(1, max_local_steps // 2)
 
@@ -48,9 +48,9 @@ class clientAPPLE(Client):
 
                 self.aggregate_parameters()
 
-                self.optimizer.zero_grad()
                 output = self.model(x)
                 loss = self.loss(output, y)
+                self.optimizer.zero_grad()
                 loss.backward()
 
                 for param_c, param in zip(self.model_cs[self.id].parameters(), self.model.parameters()):

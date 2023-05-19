@@ -29,7 +29,7 @@ class clientAPFL(Client):
         self.model.train()
         self.model_per.train()
 
-        max_local_steps = self.local_steps
+        max_local_steps = self.local_epochs
         if self.train_slow:
             max_local_steps = np.random.randint(1, max_local_steps // 2)
 
@@ -42,15 +42,15 @@ class clientAPFL(Client):
                 y = y.to(self.device)
                 if self.train_slow:
                     time.sleep(0.1 * np.abs(np.random.rand()))
-                self.optimizer.zero_grad()
                 output = self.model(x)
                 loss = self.loss(output, y)
+                self.optimizer.zero_grad()
                 loss.backward()
                 self.optimizer.step()
 
-                self.optimizer_per.zero_grad()
                 output_per = self.model_per(x)
                 loss_per = self.loss(output_per, y)
+                self.optimizer_per.zero_grad()
                 loss_per.backward()
                 self.optimizer_per.step()
 

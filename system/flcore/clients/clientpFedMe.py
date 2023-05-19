@@ -33,7 +33,7 @@ class clientpFedMe(Client):
         # self.model.to(self.device)
         self.model.train()
 
-        max_local_steps = self.local_steps
+        max_local_steps = self.local_epochs
         if self.train_slow:
             max_local_steps = np.random.randint(1, max_local_steps // 2)
 
@@ -49,9 +49,9 @@ class clientpFedMe(Client):
 
                 # K is number of personalized steps
                 for i in range(self.K):
-                    self.optimizer.zero_grad()
                     output = self.model(x)
                     loss = self.loss(output, y)
+                    self.optimizer.zero_grad()
                     loss.backward()
                     # finding aproximate theta
                     self.personalized_params = self.optimizer.step(self.local_params, self.device)
@@ -101,7 +101,7 @@ class clientpFedMe(Client):
         
         return test_acc, test_num
 
-    def train_accuracy_and_loss_personalized(self):
+    def train_metrics_personalized(self):
         trainloader = self.load_train_data()
         self.update_parameters(self.model, self.personalized_params)
         # self.model.to(self.device)

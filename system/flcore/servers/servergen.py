@@ -16,7 +16,7 @@ class FedGen(Server):
 
         # select slow clients
         self.set_slow_clients()
-        self.set_clients(args, clientGen)
+        self.set_clients(clientGen)
 
         print(f"\nJoin ratio / total clients: {self.join_ratio} / {self.num_clients}")
         print("Finished creating server and clients.")
@@ -70,6 +70,8 @@ class FedGen(Server):
             # [t.join() for t in threads]
 
             self.receive_models()
+            if self.dlg_eval and i%self.dlg_gap == 0:
+                self.call_dlg(i)
             self.train_generator()
             self.aggregate_parameters()
 
@@ -88,6 +90,13 @@ class FedGen(Server):
 
         self.save_results()
         self.save_global_model()
+
+        if self.num_new_clients > 0:
+            self.eval_new_clients = True
+            self.set_new_clients(clientGen)
+            print(f"\n-------------Fine tuning round-------------")
+            print("\nEvaluate new clients")
+            self.evaluate()
 
 
     def send_models(self):
@@ -150,6 +159,27 @@ class FedGen(Server):
             self.generative_optimizer.step()
         
         self.generative_learning_rate_scheduler.step()
+
+    # fine-tuning on new clients
+    def fine_tuning_new_clients(self):
+        for client in self.new_clients:
+            client.set_parameters(self.global_model, self.generative_model, self.qualified_labels)
+            opt = torch.optim.SGD(client.model.parameters(), lr=self.learning_rate)
+            CEloss = torch.nn.CrossEntropyLoss()
+            trainloader = client.load_train_data()
+            client.model.train()
+            for e in range(self.fine_tuning_epoch):
+                for i, (x, y) in enumerate(trainloader):
+                    if type(x) == type([]):
+                        x[0] = x[0].to(client.device)
+                    else:
+                        x = x.to(client.device)
+                    y = y.to(client.device)
+                    output = client.model(x)
+                    loss = CEloss(output, y)
+                    opt.zero_grad()
+                    loss.backward()
+                    opt.step()
 
 
 class Generative(nn.Module):

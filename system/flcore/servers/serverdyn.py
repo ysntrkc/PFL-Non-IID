@@ -12,7 +12,7 @@ class FedDyn(Server):
 
         # select slow clients
         self.set_slow_clients()
-        self.set_clients(args, clientDyn)
+        self.set_clients(clientDyn)
 
         print(f"\nJoin ratio / total clients: {self.join_ratio} / {self.num_clients}")
         print("Finished creating server and clients.")
@@ -47,6 +47,8 @@ class FedDyn(Server):
             # [t.join() for t in threads]
 
             self.receive_models()
+            if self.dlg_eval and i%self.dlg_gap == 0:
+                self.call_dlg(i)
             self.update_server_state()
             self.aggregate_parameters()
 
@@ -66,6 +68,13 @@ class FedDyn(Server):
 
         self.save_results()
         self.save_global_model()
+
+        if self.num_new_clients > 0:
+            self.eval_new_clients = True
+            self.set_new_clients(clientDyn)
+            print(f"\n-------------Fine tuning round-------------")
+            print("\nEvaluate new clients")
+            self.evaluate()
 
     def add_parameters(self, client_model):
         for server_param, client_param in zip(self.global_model.parameters(), client_model.parameters()):

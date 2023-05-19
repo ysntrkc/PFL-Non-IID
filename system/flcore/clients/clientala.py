@@ -3,22 +3,26 @@ import torch.nn as nn
 import numpy as np
 import time
 from flcore.clients.clientbase import Client
-from utils.privacy import *
+from utils.data_utils import read_client_data
+from utils.ALA import ALA
 
 
-class clientAVG(Client):
+class clientALA(Client):
     def __init__(self, args, id, train_samples, test_samples, **kwargs):
         super().__init__(args, id, train_samples, test_samples, **kwargs)
+
+        self.eta = args.eta
+        self.rand_percent = args.rand_percent
+        self.layer_idx = args.layer_idx
+
+        train_data = read_client_data(self.dataset, self.id, is_train=True)
+        self.ALA = ALA(self.id, self.loss, train_data, self.batch_size, 
+                    self.rand_percent, self.layer_idx, self.eta, self.device)
 
     def train(self):
         trainloader = self.load_train_data()
         # self.model.to(self.device)
         self.model.train()
-
-        # differential privacy
-        if self.privacy:
-            self.model, self.optimizer, trainloader, privacy_engine = \
-                initialize_dp(self.model, self.optimizer, trainloader, self.dp_sigma)
         
         start_time = time.time()
 
@@ -48,7 +52,7 @@ class clientAVG(Client):
 
         self.train_time_cost['num_rounds'] += 1
         self.train_time_cost['total_cost'] += time.time() - start_time
+        
 
-        if self.privacy:
-            eps, DELTA = get_dp_params(privacy_engine)
-            print(f"Client {self.id}", f"epsilon = {eps:.2f}, sigma = {DELTA}")
+    def local_initialization(self, received_global_model):
+        self.ALA.adaptive_local_aggregation(received_global_model, self.model)

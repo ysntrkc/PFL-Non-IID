@@ -17,6 +17,7 @@ class Client(object):
 
     def __init__(self, args, id, train_samples, test_samples, **kwargs):
         self.model = copy.deepcopy(args.model)
+        self.algorithm = args.algorithm
         self.dataset = args.dataset
         self.device = args.device
         self.id = id  # integer
@@ -27,7 +28,7 @@ class Client(object):
         self.test_samples = test_samples
         self.batch_size = args.batch_size
         self.learning_rate = args.local_learning_rate
-        self.local_steps = args.local_steps
+        self.local_epochs = args.local_epochs
 
         # check BatchNorm
         self.has_BatchNorm = False
@@ -43,7 +44,6 @@ class Client(object):
 
         self.privacy = args.privacy
         self.dp_sigma = args.dp_sigma
-        self.sample_rate = self.batch_size / self.train_samples
 
         self.loss = nn.CrossEntropyLoss()
         self.optimizer = torch.optim.SGD(self.model.parameters(), lr=self.learning_rate)

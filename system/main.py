@@ -32,6 +32,7 @@ from flcore.servers.serverapple import APPLE
 from flcore.servers.servergen import FedGen
 from flcore.servers.serverscaffold import SCAFFOLD
 from flcore.servers.serverdistill import FedDistill
+from flcore.servers.serverala import FedALA
 
 from flcore.trainmodel.models import *
 from flcore.trainmodel.dense_models import *
@@ -330,6 +331,9 @@ def run(args):
         elif args.algorithm == "FedDistill":
             server = FedDistill(args, i)
 
+        elif args.algorithm == "FedALA":
+            server = FedALA(args, i)
+
         else:
             raise NotImplementedError
 
@@ -341,7 +345,11 @@ def run(args):
 
     # Global average
     average_data(
-        dataset=args.dataset, algorithm=args.algorithm, goal=args.goal, times=args.times, args=args
+        dataset=args.dataset,
+        algorithm=args.algorithm,
+        goal=args.goal,
+        times=args.times,
+        args=args,
     )
 
     print("All done!")
@@ -359,9 +367,6 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     # general
     parser.add_argument(
-        "-lm", "--load_model", type=bool, default=False, help="Load model"
-    )
-    parser.add_argument(
         "-go", "--goal", type=str, default="test", help="The goal for this experiment"
     )
     parser.add_argument(
@@ -371,7 +376,6 @@ if __name__ == "__main__":
     parser.add_argument("-data", "--dataset", type=str, default="mnist")
     parser.add_argument("-nb", "--num_classes", type=int, default=10)
     parser.add_argument("-m", "--model", type=str, default="cnn")
-    parser.add_argument("-p", "--head", type=str, default="cnn")
     parser.add_argument("-lbs", "--batch_size", type=int, default=10)
     parser.add_argument(
         "-lr",
@@ -382,7 +386,7 @@ if __name__ == "__main__":
     )
     parser.add_argument("-ld", "--learning_rate_decay", type=bool, default=False)
     parser.add_argument("-ldg", "--learning_rate_decay_gamma", type=float, default=0.99)
-    parser.add_argument("-gr", "--global_rounds", type=int, default=1000)
+    parser.add_argument("-gr", "--global_rounds", type=int, default=2000)
     parser.add_argument("-ls", "--local_steps", type=int, default=1)
     parser.add_argument("-algo", "--algorithm", type=str, default="FedAvg")
     parser.add_argument(
@@ -413,7 +417,7 @@ if __name__ == "__main__":
         "-dp", "--privacy", type=bool, default=False, help="differential privacy"
     )
     parser.add_argument("-dps", "--dp_sigma", type=float, default=0.0)
-    parser.add_argument("-sfn", "--save_folder_name", type=str, default="models")
+    parser.add_argument("-sfn", "--save_folder_name", type=str, default="items")
     parser.add_argument("-ab", "--auto_break", type=bool, default=False)
     parser.add_argument("-dlg", "--dlg_eval", type=bool, default=False)
     parser.add_argument("-dlgg", "--dlg_gap", type=int, default=100)
@@ -523,6 +527,15 @@ if __name__ == "__main__":
     # APPLE
     parser.add_argument("-dlr", "--dr_learning_rate", type=float, default=0.0)
     parser.add_argument("-L", "--L", type=float, default=1.0)
+    # FedGen
+    parser.add_argument("-nd", "--noise_dim", type=int, default=512)
+    parser.add_argument("-glr", "--generator_learning_rate", type=float, default=0.005)
+    parser.add_argument("-hd", "--hidden_dim", type=int, default=512)
+    parser.add_argument("-se", "--server_epochs", type=int, default=1000)
+    parser.add_argument("-lf", "--localize_feature_extractor", type=bool, default=False)
+    # SCAFFOLD
+    parser.add_argument("-slr", "--server_learning_rate", type=float, default=1.0)
+
     args = parser.parse_args()
 
     os.environ["CUDA_VISIBLE_DEVICES"] = args.device_id
@@ -535,7 +548,7 @@ if __name__ == "__main__":
 
     print("Algorithm: {}".format(args.algorithm))
     print("Local batch size: {}".format(args.batch_size))
-    print("Local steps: {}".format(args.local_steps))
+    print("Local steps: {}".format(args.local_epochs))
     print("Local learing rate: {}".format(args.local_learning_rate))
     print("Local learing rate decay: {}".format(args.learning_rate_decay))
     if args.learning_rate_decay:
@@ -562,9 +575,11 @@ if __name__ == "__main__":
         print("Global rounds: {}".format(args.global_rounds))
     if args.device == "cuda":
         print("Cuda device id: {}".format(os.environ["CUDA_VISIBLE_DEVICES"]))
-    print("DLG attack evaluate: {}".format(args.dlg_eval))
+    print("DLG attack: {}".format(args.dlg_eval))
     if args.dlg_eval:
-        print("DLG attack evaluate round gap: {}".format(args.dlg_gap))
+        print("DLG attack round gap: {}".format(args.dlg_gap))
+    print("Total number of new clients: {}".format(args.num_new_clients))
+    print("Fine tuning epoches on new clients: {}".format(args.fine_tuning_epoch))
     print("=" * 50)
 
     # if args.dataset == "mnist" or args.dataset == "fmnist":
