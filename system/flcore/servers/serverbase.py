@@ -69,8 +69,8 @@ class Server(object):
         ):
             train_data = read_client_data(self.dataset, i, is_train=True)
             test_data = read_client_data(self.dataset, i, is_train=False)
-            client = clientObj(self.
-                args,
+            client = clientObj(
+                self.args,
                 id=i,
                 train_samples=len(train_data),
                 test_samples=len(test_data),
@@ -189,7 +189,7 @@ class Server(object):
             os.makedirs(result_path)
 
         if len(self.rs_test_acc):
-            file_path = f"{result_path}{algo}_{self.goal}_gr{self.global_rounds}_ls{self.local_steps}_bs{self.batch_size}_lr{self.learning_rate}.h5"
+            file_path = f"{result_path}{algo}_{self.goal}_gr{self.global_rounds}_ls{self.local_epochs}_bs{self.batch_size}_lr{self.learning_rate}.h5"
             print("File path: " + file_path)
 
             with h5py.File(file_path, "w") as hf:

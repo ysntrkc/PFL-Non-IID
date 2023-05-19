@@ -24,11 +24,11 @@ class clientMOON(Client):
         # self.model.to(self.device)
         self.model.train()
 
-        max_local_steps = self.local_epochs
+        max_local_epochs = self.local_epochs
         if self.train_slow:
-            max_local_steps = np.random.randint(1, max_local_steps // 2)
+            max_local_epochs = np.random.randint(1, max_local_epochs // 2)
 
-        for step in range(max_local_steps):
+        for step in range(max_local_epochs):
             for i, (x, y) in enumerate(trainloader):
                 if type(x) == type([]):
                     x[0] = x[0].to(self.device)
@@ -43,7 +43,13 @@ class clientMOON(Client):
 
                 rep_old = self.old_model.base(x).detach()
                 rep_global = self.global_model.base(x).detach()
-                loss_con = - torch.log(torch.exp(F.cosine_similarity(rep, rep_global) / self.tau) / (torch.exp(F.cosine_similarity(rep, rep_global) / self.tau) + torch.exp(F.cosine_similarity(rep, rep_old) / self.tau)))
+                loss_con = -torch.log(
+                    torch.exp(F.cosine_similarity(rep, rep_global) / self.tau)
+                    / (
+                        torch.exp(F.cosine_similarity(rep, rep_global) / self.tau)
+                        + torch.exp(F.cosine_similarity(rep, rep_old) / self.tau)
+                    )
+                )
                 loss += self.mu * torch.mean(loss_con)
 
                 self.optimizer.zero_grad()
@@ -56,9 +62,8 @@ class clientMOON(Client):
         if self.learning_rate_decay:
             self.learning_rate_scheduler.step()
 
-        self.train_time_cost['num_rounds'] += 1
-        self.train_time_cost['total_cost'] += time.time() - start_time
-
+        self.train_time_cost["num_rounds"] += 1
+        self.train_time_cost["total_cost"] += time.time() - start_time
 
     def set_parameters(self, model):
         for new_param, old_param in zip(model.parameters(), self.model.parameters()):
@@ -87,7 +92,13 @@ class clientMOON(Client):
 
                 rep_old = self.old_model.base(x).detach()
                 rep_global = self.global_model.base(x).detach()
-                loss_con = - torch.log(torch.exp(F.cosine_similarity(rep, rep_global) / self.tau) / (torch.exp(F.cosine_similarity(rep, rep_global) / self.tau) + torch.exp(F.cosine_similarity(rep, rep_old) / self.tau)))
+                loss_con = -torch.log(
+                    torch.exp(F.cosine_similarity(rep, rep_global) / self.tau)
+                    / (
+                        torch.exp(F.cosine_similarity(rep, rep_global) / self.tau)
+                        + torch.exp(F.cosine_similarity(rep, rep_old) / self.tau)
+                    )
+                )
                 loss += self.mu * torch.mean(loss_con)
                 train_num += y.shape[0]
                 losses += loss.item() * y.shape[0]

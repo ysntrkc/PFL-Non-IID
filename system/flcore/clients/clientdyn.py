@@ -16,7 +16,6 @@ class clientDyn(Client):
         old_grad = copy.deepcopy(self.model)
         old_grad = model_parameter_vector(old_grad)
         self.old_grad = torch.zeros_like(old_grad)
-        
 
     def train(self):
         trainloader = self.load_train_data()
@@ -25,11 +24,11 @@ class clientDyn(Client):
         # self.model.to(self.device)
         self.model.train()
 
-        max_local_steps = self.local_epochs
+        max_local_epochs = self.local_epochs
         if self.train_slow:
-            max_local_steps = np.random.randint(1, max_local_steps // 2)
+            max_local_epochs = np.random.randint(1, max_local_epochs // 2)
 
-        for step in range(max_local_steps):
+        for step in range(max_local_epochs):
             for i, (x, y) in enumerate(trainloader):
                 if type(x) == type([]):
                     x[0] = x[0].to(self.device)
@@ -43,7 +42,9 @@ class clientDyn(Client):
 
                 if self.global_model_vector != None:
                     v1 = model_parameter_vector(self.model)
-                    loss += self.alpha/2 * torch.norm(v1 - self.global_model_vector, 2)
+                    loss += (
+                        self.alpha / 2 * torch.norm(v1 - self.global_model_vector, 2)
+                    )
                     loss -= torch.dot(v1, self.old_grad)
 
                 self.optimizer.zero_grad()
@@ -59,9 +60,8 @@ class clientDyn(Client):
         if self.learning_rate_decay:
             self.learning_rate_scheduler.step()
 
-        self.train_time_cost['num_rounds'] += 1
-        self.train_time_cost['total_cost'] += time.time() - start_time
-
+        self.train_time_cost["num_rounds"] += 1
+        self.train_time_cost["total_cost"] += time.time() - start_time
 
     def set_parameters(self, model):
         for new_param, old_param in zip(model.parameters(), self.model.parameters()):
@@ -89,7 +89,9 @@ class clientDyn(Client):
 
                 if self.global_model_vector != None:
                     v1 = model_parameter_vector(self.model)
-                    loss += self.alpha/2 * torch.norm(v1 - self.global_model_vector, 2)
+                    loss += (
+                        self.alpha / 2 * torch.norm(v1 - self.global_model_vector, 2)
+                    )
                     loss -= torch.dot(v1, self.old_grad)
                 train_num += y.shape[0]
                 losses += loss.item() * y.shape[0]

@@ -17,7 +17,6 @@ class clientProto(Client):
 
         self.lamda = args.lamda
 
-
     def train(self):
         trainloader = self.load_train_data()
         start_time = time.time()
@@ -25,12 +24,12 @@ class clientProto(Client):
         # self.model.to(self.device)
         self.model.train()
 
-        max_local_steps = self.local_epochs
+        max_local_epochs = self.local_epochs
         if self.train_slow:
-            max_local_steps = np.random.randint(1, max_local_steps // 2)
+            max_local_epochs = np.random.randint(1, max_local_epochs // 2)
 
         protos = defaultdict(list)
-        for step in range(max_local_steps):
+        for step in range(max_local_epochs):
             for i, (x, y) in enumerate(trainloader):
                 if type(x) == type([]):
                     x[0] = x[0].to(self.device)
@@ -69,9 +68,8 @@ class clientProto(Client):
         if self.learning_rate_decay:
             self.learning_rate_scheduler.step()
 
-        self.train_time_cost['num_rounds'] += 1
-        self.train_time_cost['total_cost'] += time.time() - start_time
-
+        self.train_time_cost["num_rounds"] += 1
+        self.train_time_cost["total_cost"] += time.time() - start_time
 
     def set_protos(self, global_protos):
         self.global_protos = copy.deepcopy(global_protos)
@@ -106,7 +104,7 @@ class clientProto(Client):
 
         test_acc = 0
         test_num = 0
-        
+
         if self.global_protos is not None:
             with torch.no_grad():
                 for x, y in testloader:
@@ -117,7 +115,9 @@ class clientProto(Client):
                     y = y.to(self.device)
                     rep = self.model.base(x)
 
-                    output = float('inf') * torch.ones(y.shape[0], self.num_classes).to(self.device)
+                    output = float("inf") * torch.ones(y.shape[0], self.num_classes).to(
+                        self.device
+                    )
                     for i, r in enumerate(rep):
                         for j, pro in self.global_protos.items():
                             if type(pro) != type([]):

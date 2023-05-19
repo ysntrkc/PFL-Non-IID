@@ -12,12 +12,11 @@ from sklearn import metrics
 class clientROD(Client):
     def __init__(self, args, id, train_samples, test_samples, **kwargs):
         super().__init__(args, id, train_samples, test_samples, **kwargs)
-                
+
         self.head = copy.deepcopy(self.model.head)
         self.opt_head = torch.optim.SGD(self.head.parameters(), lr=self.learning_rate)
         self.learning_rate_scheduler_head = torch.optim.lr_scheduler.ExponentialLR(
-            optimizer=self.opt_head, 
-            gamma=args.learning_rate_decay_gamma
+            optimizer=self.opt_head, gamma=args.learning_rate_decay_gamma
         )
 
         self.sample_per_class = torch.zeros(self.num_classes)
@@ -26,20 +25,19 @@ class clientROD(Client):
             for yy in y:
                 self.sample_per_class[yy.item()] += 1
 
-
     def train(self):
         trainloader = self.load_train_data()
-        
+
         start_time = time.time()
 
         # self.model.to(self.device)
         self.model.train()
 
-        max_local_steps = self.local_epochs
+        max_local_epochs = self.local_epochs
         if self.train_slow:
-            max_local_steps = np.random.randint(1, max_local_steps // 2)
+            max_local_epochs = np.random.randint(1, max_local_epochs // 2)
 
-        for step in range(max_local_steps):
+        for step in range(max_local_epochs):
             for i, (x, y) in enumerate(trainloader):
                 if type(x) == type([]):
                     x[0] = x[0].to(self.device)
@@ -65,8 +63,8 @@ class clientROD(Client):
             self.learning_rate_scheduler.step()
             self.learning_rate_scheduler_head.step()
 
-        self.train_time_cost['num_rounds'] += 1
-        self.train_time_cost['total_cost'] += time.time() - start_time
+        self.train_time_cost["num_rounds"] += 1
+        self.train_time_cost["total_cost"] += time.time() - start_time
 
     def test_metrics(self, model=None):
         testloader = self.load_test_data()
@@ -78,7 +76,7 @@ class clientROD(Client):
         test_num = 0
         y_prob = []
         y_true = []
-        
+
         with torch.no_grad():
             for x, y in testloader:
                 if type(x) == type([]):
@@ -106,8 +104,8 @@ class clientROD(Client):
         y_prob = np.concatenate(y_prob, axis=0)
         y_true = np.concatenate(y_true, axis=0)
 
-        auc = metrics.roc_auc_score(y_true, y_prob, average='micro')
-        
+        auc = metrics.roc_auc_score(y_true, y_prob, average="micro")
+
         return test_acc, test_num, auc
 
     def train_metrics(self):

@@ -20,7 +20,7 @@ def get_all_results_for_one_algo(
     test_acc = []
     algorithms_list = [algorithm] * times
     for i in range(times):
-        file_name = f"{args.dataset}_{algorithms_list[i]}_{args.goal}_gr{args.global_rounds}_ls{args.local_steps}_bs{args.batch_size}_lr{args.local_learning_rate}"
+        file_name = f"{args.dataset}_{algorithms_list[i]}_{args.goal}_gr{args.global_rounds}_ls{args.local_epochs}_bs{args.batch_size}_lr{args.local_learning_rate}"
         test_acc.append(np.array(read_data_then_delete(file_name, delete=False)))
 
     return test_acc

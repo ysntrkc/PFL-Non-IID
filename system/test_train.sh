@@ -66,6 +66,6 @@
 # python -u main.py -lbs 24 -nc 10 -jr 1 -nb 5 -data brain_16 -m dense121 -algo FedAvg -gr 300 -did 0 -go dense121 -ls 10 > out/brain/fedavg_dense_6_iid.out 2>&1 &
 # python -u main.py -lbs 48 -nc 10 -jr 1 -nb 5 -data brain -m dense121 -algo FedAvg -gr 100 -did 0 -go dense121 -ls 10 > out/brain/fedavg_dense_48_1_iid.out 2>&1 &
 
-python -u main.py -lbs 100 -nc 10 -jr 1 -nb 7 -data ham10000 -m dense121 -algo FedAvg -gr 5 -did 0 -go resnet -ls 1 > out/ham10000/resnet_deneme_01.out 2>&1 &
+python -u main.py -lbs 100 -nc 10 -jr 1 -nb 7 -data ham10000 -m dense121 -algo FedAvg -gr 2 -did 0 -go resnet -ls 1 -lr 0.1 -ld True > out/ham10000/resnet_deneme_01.out 2>&1 &
 
 python -u main.py -lbs 48 -nc 10 -jr 1 -nb 7 -data ham10000 -m dense121 -algo FedAvg -gr 100 -did 0 -go resnet -ls 1 > out/ham10000/resnet_deneme_01.out 2>&1 &

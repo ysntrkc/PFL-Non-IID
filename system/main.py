@@ -365,6 +365,12 @@ if __name__ == "__main__":
     total_start = time.time()
 
     parser = argparse.ArgumentParser()
+
+    # my args
+    parser.add_argument(
+        "-lm", "--load_model", type=bool, default=False, help="Load model"
+    )
+
     # general
     parser.add_argument(
         "-go", "--goal", type=str, default="test", help="The goal for this experiment"
@@ -387,7 +393,13 @@ if __name__ == "__main__":
     parser.add_argument("-ld", "--learning_rate_decay", type=bool, default=False)
     parser.add_argument("-ldg", "--learning_rate_decay_gamma", type=float, default=0.99)
     parser.add_argument("-gr", "--global_rounds", type=int, default=2000)
-    parser.add_argument("-ls", "--local_steps", type=int, default=1)
+    parser.add_argument(
+        "-ls",
+        "--local_epochs",
+        type=int,
+        default=1,
+        help="Multiple update steps in one local epoch.",
+    )
     parser.add_argument("-algo", "--algorithm", type=str, default="FedAvg")
     parser.add_argument(
         "-jr",
@@ -422,6 +434,8 @@ if __name__ == "__main__":
     parser.add_argument("-dlg", "--dlg_eval", type=bool, default=False)
     parser.add_argument("-dlgg", "--dlg_gap", type=int, default=100)
     parser.add_argument("-bnpc", "--batch_num_per_client", type=int, default=2)
+    parser.add_argument("-nnc", "--num_new_clients", type=int, default=0)
+    parser.add_argument("-fte", "--fine_tuning_epoch", type=int, default=0)
     # practical
     parser.add_argument(
         "-cdr",
@@ -468,11 +482,7 @@ if __name__ == "__main__":
                         or L1 regularization weight of FedTransfer",
     )
     parser.add_argument(
-        "-lam",
-        "--lamda",
-        type=float,
-        default=1.0,
-        help="Regularization weight for pFedMe and FedAMP",
+        "-lam", "--lamda", type=float, default=1.0, help="Regularization weight"
     )
     parser.add_argument(
         "-mu", "--mu", type=float, default=0, help="Proximal rate for FedProx"
@@ -519,11 +529,11 @@ if __name__ == "__main__":
     # APFL
     parser.add_argument("-al", "--alpha", type=float, default=1.0)
     # Ditto / FedRep
-    parser.add_argument("-pls", "--plocal_steps", type=int, default=1)
+    parser.add_argument("-pls", "--plocal_epochs", type=int, default=1)
     # MOON
     parser.add_argument("-ta", "--tau", type=float, default=1.0)
     # FedBABU
-    parser.add_argument("-fts", "--fine_tuning_steps", type=int, default=1)
+    parser.add_argument("-fts", "--fine_tuning_steps", type=int, default=10)
     # APPLE
     parser.add_argument("-dlr", "--dr_learning_rate", type=float, default=0.0)
     parser.add_argument("-L", "--L", type=float, default=1.0)
@@ -535,6 +545,10 @@ if __name__ == "__main__":
     parser.add_argument("-lf", "--localize_feature_extractor", type=bool, default=False)
     # SCAFFOLD
     parser.add_argument("-slr", "--server_learning_rate", type=float, default=1.0)
+    # FedALA
+    parser.add_argument("-et", "--eta", type=float, default=1.0)
+    parser.add_argument("-rp", "--rand_percent", type=int, default=80)
+    parser.add_argument("-li", "--layer_idx", type=int, default=1)
 
     args = parser.parse_args()
 

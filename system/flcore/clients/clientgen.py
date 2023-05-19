@@ -31,7 +31,6 @@ class clientGen(Client):
         self.qualified_labels = []
         self.generative_model = None
         self.localize_feature_extractor = args.localize_feature_extractor
-        
 
     def train(self):
         trainloader = self.load_train_data()
@@ -40,16 +39,17 @@ class clientGen(Client):
 
         # differential privacy
         if self.privacy:
-            self.model, self.optimizer, trainloader, privacy_engine = \
-                initialize_dp(self.model, self.optimizer, trainloader, self.dp_sigma)
-        
+            self.model, self.optimizer, trainloader, privacy_engine = initialize_dp(
+                self.model, self.optimizer, trainloader, self.dp_sigma
+            )
+
         start_time = time.time()
 
-        max_local_steps = self.local_epochs
+        max_local_epochs = self.local_epochs
         if self.train_slow:
-            max_local_steps = np.random.randint(1, max_local_steps // 2)
+            max_local_epochs = np.random.randint(1, max_local_epochs // 2)
 
-        for step in range(max_local_steps):
+        for step in range(max_local_epochs):
             for i, (x, y) in enumerate(trainloader):
                 if type(x) == type([]):
                     x[0] = x[0].to(self.device)
@@ -60,7 +60,7 @@ class clientGen(Client):
                     time.sleep(0.1 * np.abs(np.random.rand()))
                 output = self.model(x)
                 loss = self.loss(output, y)
-                
+
                 labels = np.random.choice(self.qualified_labels, self.batch_size)
                 labels = torch.LongTensor(labels).to(self.device)
                 z = self.generative_model(labels)
@@ -75,20 +75,23 @@ class clientGen(Client):
         if self.learning_rate_decay:
             self.learning_rate_scheduler.step()
 
-        self.train_time_cost['num_rounds'] += 1
-        self.train_time_cost['total_cost'] += time.time() - start_time
+        self.train_time_cost["num_rounds"] += 1
+        self.train_time_cost["total_cost"] += time.time() - start_time
 
         if self.privacy:
             eps, DELTA = get_dp_params(privacy_engine)
             print(f"Client {self.id}", f"epsilon = {eps:.2f}, sigma = {DELTA}")
-            
-        
+
     def set_parameters(self, model, generative_model, qualified_labels):
         if self.localize_feature_extractor:
-            for new_param, old_param in zip(model.parameters(), self.model.head.parameters()):
+            for new_param, old_param in zip(
+                model.parameters(), self.model.head.parameters()
+            ):
                 old_param.data = new_param.data.clone()
         else:
-            for new_param, old_param in zip(model.parameters(), self.model.parameters()):
+            for new_param, old_param in zip(
+                model.parameters(), self.model.parameters()
+            ):
                 old_param.data = new_param.data.clone()
 
         self.generative_model = generative_model
@@ -111,12 +114,12 @@ class clientGen(Client):
                 y = y.to(self.device)
                 output = self.model(x)
                 loss = self.loss(output, y)
-                
+
                 labels = np.random.choice(self.qualified_labels, self.batch_size)
                 labels = torch.LongTensor(labels).to(self.device)
                 z = self.generative_model(labels)
                 loss += self.loss(self.model.head(z), labels)
-                
+
                 train_num += y.shape[0]
                 losses += loss.item() * y.shape[0]
 

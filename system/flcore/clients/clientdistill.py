@@ -17,7 +17,6 @@ class clientDistill(Client):
 
         self.lamda = args.lamda
 
-
     def train(self):
         trainloader = self.load_train_data()
         start_time = time.time()
@@ -25,12 +24,12 @@ class clientDistill(Client):
         # self.model.to(self.device)
         self.model.train()
 
-        max_local_steps = self.local_epochs
+        max_local_epochs = self.local_epochs
         if self.train_slow:
-            max_local_steps = np.random.randint(1, max_local_steps // 2)
+            max_local_epochs = np.random.randint(1, max_local_epochs // 2)
 
         logits = defaultdict(list)
-        for step in range(max_local_steps):
+        for step in range(max_local_epochs):
             for i, (x, y) in enumerate(trainloader):
                 if type(x) == type([]):
                     x[0] = x[0].to(self.device)
@@ -65,9 +64,8 @@ class clientDistill(Client):
         if self.learning_rate_decay:
             self.learning_rate_scheduler.step()
 
-        self.train_time_cost['num_rounds'] += 1
-        self.train_time_cost['total_cost'] += time.time() - start_time
-
+        self.train_time_cost["num_rounds"] += 1
+        self.train_time_cost["total_cost"] += time.time() - start_time
 
     def set_logits(self, global_logits):
         self.global_logits = copy.deepcopy(global_logits)
@@ -97,7 +95,7 @@ class clientDistill(Client):
                         if type(self.global_logits[y_c]) != type([]):
                             logit_new[i, :] = self.global_logits[y_c].data
                     loss += self.loss_mse(logit_new, output) * self.lamda
-                    
+
                 train_num += y.shape[0]
                 losses += loss.item() * y.shape[0]
 

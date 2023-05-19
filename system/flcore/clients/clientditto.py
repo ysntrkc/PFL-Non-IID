@@ -15,29 +15,29 @@ class clientDitto(Client):
         super().__init__(args, id, train_samples, test_samples, **kwargs)
 
         self.mu = args.mu
-        self.plocal_steps = args.plocal_steps
+        self.plocal_epochs = args.plocal_epochs
 
         self.model_per = copy.deepcopy(self.model)
         self.optimizer_per = PerturbedGradientDescent(
-            self.model_per.parameters(), lr=self.learning_rate, mu=self.mu)
+            self.model_per.parameters(), lr=self.learning_rate, mu=self.mu
+        )
         self.learning_rate_scheduler_per = torch.optim.lr_scheduler.ExponentialLR(
-            optimizer=self.optimizer_per, 
-            gamma=args.learning_rate_decay_gamma
+            optimizer=self.optimizer_per, gamma=args.learning_rate_decay_gamma
         )
 
     def train(self):
         trainloader = self.load_train_data()
-        
+
         start_time = time.time()
 
         # self.model.to(self.device)
         self.model.train()
 
-        max_local_steps = self.local_epochs
+        max_local_epochs = self.local_epochs
         if self.train_slow:
-            max_local_steps = np.random.randint(1, max_local_steps // 2)
+            max_local_epochs = np.random.randint(1, max_local_epochs // 2)
 
-        for step in range(max_local_steps):
+        for step in range(max_local_epochs):
             for i, (x, y) in enumerate(trainloader):
                 if type(x) == type([]):
                     x[0] = x[0].to(self.device)
@@ -58,10 +58,9 @@ class clientDitto(Client):
             self.learning_rate_scheduler.step()
             self.learning_rate_scheduler_per.step()
 
-        self.train_time_cost['num_rounds'] += 1
-        self.train_time_cost['total_cost'] += time.time() - start_time
+        self.train_time_cost["num_rounds"] += 1
+        self.train_time_cost["total_cost"] += time.time() - start_time
 
-        
     def ptrain(self):
         trainloader = self.load_train_data()
 
@@ -70,11 +69,11 @@ class clientDitto(Client):
         # self.model.to(self.device)
         self.model_per.train()
 
-        max_local_steps = self.plocal_steps
+        max_local_epochs = self.plocal_epochs
         if self.train_slow:
-            max_local_steps = np.random.randint(1, max_local_steps // 2)
+            max_local_epochs = np.random.randint(1, max_local_epochs // 2)
 
-        for step in range(max_local_steps):
+        for step in range(max_local_epochs):
             for x, y in trainloader:
                 if type(x) == type([]):
                     x[0] = x[0].to(self.device)
@@ -91,7 +90,7 @@ class clientDitto(Client):
 
         # self.model.cpu()
 
-        self.train_time_cost['total_cost'] += time.time() - start_time
+        self.train_time_cost["total_cost"] += time.time() - start_time
 
     def test_metrics_personalized(self):
         testloaderfull = self.load_test_data()
@@ -103,7 +102,7 @@ class clientDitto(Client):
         test_num = 0
         y_prob = []
         y_true = []
-        
+
         with torch.no_grad():
             for x, y in testloaderfull:
                 if type(x) == type([]):
@@ -117,15 +116,19 @@ class clientDitto(Client):
                 test_num += y.shape[0]
 
                 y_prob.append(F.softmax(output).detach().cpu().numpy())
-                y_true.append(label_binarize(y.detach().cpu().numpy(), classes=np.arange(self.num_classes)))
+                y_true.append(
+                    label_binarize(
+                        y.detach().cpu().numpy(), classes=np.arange(self.num_classes)
+                    )
+                )
 
         # self.model.cpu()
 
         y_prob = np.concatenate(y_prob, axis=0)
         y_true = np.concatenate(y_true, axis=0)
 
-        auc = metrics.roc_auc_score(y_true, y_prob, average='micro')
-        
+        auc = metrics.roc_auc_score(y_true, y_prob, average="micro")
+
         return test_acc, test_num, auc
 
     def train_metrics_personalized(self):
@@ -144,10 +147,14 @@ class clientDitto(Client):
                 output = self.model_per(x)
                 loss = self.loss(output, y)
 
-                gm = torch.cat([p.data.view(-1) for p in self.model.parameters()], dim=0)
-                pm = torch.cat([p.data.view(-1) for p in self.model_per.parameters()], dim=0)
-                loss += 0.5 * self.mu * torch.norm(gm-pm, p=2)
-                
+                gm = torch.cat(
+                    [p.data.view(-1) for p in self.model.parameters()], dim=0
+                )
+                pm = torch.cat(
+                    [p.data.view(-1) for p in self.model_per.parameters()], dim=0
+                )
+                loss += 0.5 * self.mu * torch.norm(gm - pm, p=2)
+
                 train_num += y.shape[0]
                 losses += loss.item() * y.shape[0]
 

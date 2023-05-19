@@ -20,10 +20,12 @@ class clientpFedMe(Client):
         self.personalized_params = copy.deepcopy(list(self.model.parameters()))
 
         self.optimizer = pFedMeOptimizer(
-            self.model.parameters(), lr=self.personalized_learning_rate, lamda=self.lamda)
+            self.model.parameters(),
+            lr=self.personalized_learning_rate,
+            lamda=self.lamda,
+        )
         self.learning_rate_scheduler = torch.optim.lr_scheduler.ExponentialLR(
-            optimizer=self.optimizer, 
-            gamma=args.learning_rate_decay_gamma
+            optimizer=self.optimizer, gamma=args.learning_rate_decay_gamma
         )
 
     def train(self):
@@ -33,11 +35,11 @@ class clientpFedMe(Client):
         # self.model.to(self.device)
         self.model.train()
 
-        max_local_steps = self.local_epochs
+        max_local_epochs = self.local_epochs
         if self.train_slow:
-            max_local_steps = np.random.randint(1, max_local_steps // 2)
+            max_local_epochs = np.random.randint(1, max_local_epochs // 2)
 
-        for step in range(max_local_steps):  # local update
+        for step in range(max_local_epochs):  # local update
             for x, y in trainloader:
                 if type(x) == type([]):
                     x[0] = x[0].to(self.device)
@@ -54,12 +56,21 @@ class clientpFedMe(Client):
                     self.optimizer.zero_grad()
                     loss.backward()
                     # finding aproximate theta
-                    self.personalized_params = self.optimizer.step(self.local_params, self.device)
+                    self.personalized_params = self.optimizer.step(
+                        self.local_params, self.device
+                    )
 
                 # update local weight after finding aproximate theta
-                for new_param, localweight in zip(self.personalized_params, self.local_params):
+                for new_param, localweight in zip(
+                    self.personalized_params, self.local_params
+                ):
                     localweight = localweight.to(self.device)
-                    localweight.data = localweight.data - self.lamda * self.learning_rate * (localweight.data - new_param.data)
+                    localweight.data = (
+                        localweight.data
+                        - self.lamda
+                        * self.learning_rate
+                        * (localweight.data - new_param.data)
+                    )
 
         # self.model.cpu()
 
@@ -68,12 +79,13 @@ class clientpFedMe(Client):
 
         self.update_parameters(self.model, self.local_params)
 
-        self.train_time_cost['num_rounds'] += 1
-        self.train_time_cost['total_cost'] += time.time() - start_time
-
+        self.train_time_cost["num_rounds"] += 1
+        self.train_time_cost["total_cost"] += time.time() - start_time
 
     def set_parameters(self, model):
-        for new_param, old_param, local_param in zip(model.parameters(), self.model.parameters(), self.local_params):
+        for new_param, old_param, local_param in zip(
+            model.parameters(), self.model.parameters(), self.local_params
+        ):
             old_param.data = new_param.data.clone()
             local_param.data = new_param.data.clone()
 
@@ -85,7 +97,7 @@ class clientpFedMe(Client):
 
         test_acc = 0
         test_num = 0
-        
+
         with torch.no_grad():
             for x, y in testloaderfull:
                 if type(x) == type([]):
@@ -98,7 +110,7 @@ class clientpFedMe(Client):
                 test_num += y.shape[0]
 
         # self.model.cpu()
-        
+
         return test_acc, test_num
 
     def train_metrics_personalized(self):
@@ -121,14 +133,16 @@ class clientpFedMe(Client):
                 loss = self.loss(output, y).item()
 
                 lm = torch.cat([p.data.view(-1) for p in self.local_params], dim=0)
-                pm = torch.cat([p.data.view(-1) for p in self.personalized_params], dim=0)
-                loss += 0.5 * self.lamda * torch.norm(lm-pm, p=2)
+                pm = torch.cat(
+                    [p.data.view(-1) for p in self.personalized_params], dim=0
+                )
+                loss += 0.5 * self.lamda * torch.norm(lm - pm, p=2)
 
                 train_acc += (torch.sum(torch.argmax(output, dim=1) == y)).item()
-                
+
                 train_num += y.shape[0]
                 losses += loss.item() * y.shape[0]
 
         # self.model.cpu()
-        
+
         return train_acc, losses, train_num
